@@ -1,0 +1,13 @@
+@CHARSET "UTF-8";
+textarea {
+	resize: none;
+}
+input[type="text"] {
+	width: 300px;
+}
+address {
+	background: #7CFC00;
+}
+header {
+	background: #7CFC00;
+}

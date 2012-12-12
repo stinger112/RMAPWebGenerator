@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Packet Compare</title>
+<style type="text/css">
+	textarea {
+	resize: none;
+	}
+</style>
+</head>
+<body>
+	<div id="form">
+	<form action="handler.php?compare" method="POST">
+	<textarea name="original_pack" cols="40" rows="30" placeholder="Insert original packet"><?php echo isset($original_pack) ? $original_pack : NULL ?></textarea>
+	<textarea name="received_pack" cols="40" rows="30" placeholder="Insert received packet"></textarea>
+	<p><input type="submit" value="Сравнить"></p>
+	</form>
+	</div>
+</body>
+</html>
