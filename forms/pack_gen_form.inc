@@ -2,15 +2,9 @@
 <html>
 <head>
 <title>RMAP Simple Packet Generator</title>
-<style type="text/css">
-	textarea {
-		resize: none;
-	}
-	input[type="text"] {
-		width: 300px;
-	}
-</style>
 <link type="text/css" rel="stylesheet" href="/css/gen.css">
+	<script type="text/javascript" src="/scripts/jquery-1.8.3.min.js"></script>
+	<script type="text/javascript" src="/scripts/pack_gen_logic.js"></script>
 </head>
 <body>
 <form action="handler.php" method="POST">

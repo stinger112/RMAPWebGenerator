@@ -7,9 +7,10 @@
 <body>
 	<div id="content">
 	<h1>Выберете тест:</h1>
-	<p><a href="?gen" style="text-decoration: none"><input type="button" value="Simple Packet Generator" /></a></p>
-	<p><a href="?compare" style="text-decoration: none"><input type="button" value="Сравнить пакеты" /></a></p>
-	<p><a href="?parse" style="text-decoration: none"><input type="button" value="Анализ пакета" /></a></p>
+	<p><a href="?genext"><input type="button" value="Extended Packet Generator" /></a></p>
+	<p><a href="?generr"><input type="button" value="Error Packet Generator" /></a></p>
+	<p><a href="?compare"><input type="button" value="Сравнить пакеты" /></a></p>
+	<p><a href="?parse"><input type="button" value="Анализ пакета" /></a></p>
 	</div>
 </body>
 </html>

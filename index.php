@@ -1,7 +1,7 @@
 <?php
 	header('Content-Type: text/html; charset=utf-8');
 	
-	if (isset($_GET['gen']))
+	if (isset($_GET['genext']))
 	{	
 		include 'forms/pack_gen_form.inc';
 	}
