@@ -1,13 +1,69 @@
 @CHARSET "UTF-8";
 textarea {
 	resize: none;
+	width: 300px;
 }
 input[type="text"] {
 	width: 300px;
 }
-address {
-	background: #7CFC00;
+#left {
+	display: inline-block;
+	width: 45%;
+	padding: 0px;
+	margin-top: 1%;
+	margin-left: 1%;
+	overflow-y: auto;
 }
-header {
-	background: #7CFC00;
+#header {
+	
+	display: inline-block;
+	width: 45%;
+	background: #90EE90;
+	padding: 5px;
+	margin-top: 1%;
+	border: 4px inset black;
+	border-radius: 6px;
+	-moz-border-radius: 6px;
+	-khtml-border-radius: 6px;
+	overflow-y: auto;
+	vertical-align: top;
+}
+#address {
+	width: 92%;
+	background: #FFC0CB;
+	padding: 10px;
+	border: 4px inset black;
+	border-radius: 6px;
+	-moz-border-radius: 6px;
+	-khtml-border-radius: 6px;
+	overflow-y: auto;
+}
+#pack_body {
+	display: inline-block;
+	width: 92%;
+	background: #87CEEB;
+	padding: 10px;
+	margin-top: 1%;
+	border: 4px inset black;
+	border-radius: 6px;
+	-moz-border-radius: 6px;
+	-khtml-border-radius: 6px;
+	overflow-y: auto;
+}
+#options {
+	width: 92%;
+	background: #CCCCCC;
+	padding: 10px;
+	margin-top: 1%;
+	border: 4px inset black;
+	border-radius: 6px;
+	-moz-border-radius: 6px;
+	-khtml-border-radius: 6px;
+	overflow-y: auto;
+}
+#buttons {
+	margin-top: -10px;
+	margin-bottom: -10px;
+	text-align: center;
+	width: 100%;
 }

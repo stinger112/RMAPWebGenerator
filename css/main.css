@@ -1,0 +1,20 @@
+@CHARSET "UTF-8";
+body {
+	margin: 0;
+	padding: 0;
+}
+
+#content {
+	position: absolute;
+	left: 30%;
+	right: 30%;
+	bottom: 25%;
+	top: 25%;
+	text-align: center;
+	background-color: #CCCCCC;
+	border-radius: 6px;
+	-moz-border-radius: 6px;
+	-khtml-border-radius: 6px;
+	min-height: 300px;
+	overflow-x: auto;
+}
