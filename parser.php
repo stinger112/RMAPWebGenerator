@@ -121,7 +121,7 @@
 		['type' => 0, 'length' => 1],		// Target Logical Address
 		['type' => 0, 'length' => 1],		// Protocol ID
 		['type' => 1, 'length' => 1],		// Instruction
-		['type' => 0, 'length' => 1],		// Key|Status
+		['type' => 0, 'length' => 1],		// Key|Status - по умолчанию стоит в положении ноль, т.к. ориентирована на пакет записи (содержащий Key)
 		['type' => 0, 'length' => 0],		// Reply Address
 		['type' => 0, 'length' => 1],		// Initiator|Target Logical Address
 		['type' => 0, 'length' => 2],		// Transaction ID
@@ -130,6 +130,8 @@
 		['type' => 2, 'length' => 3],		// Data Length
 		['type' => 3, 'length' => 1]		// Header CRC
 		];
+		
+		
 		
 		public function getMap($Decompressed = FALSE) //Возвращает карту пакета в свернутом виде
 		{
@@ -150,33 +152,35 @@
 		}
 		
 		
-		public function parse($packetMap = NULL)
+		public function parse($i = 0) //Рекурсивный парсер. Работает с отрезками развернутой карты, содержащими ненулевые значения.
 		{
-
-			$arPacketBytes = $this->PacketArray();
+			$arPacket = $this->PacketArray();
 			
-			$tmpHeaderStructure = $this->getMap(TRUE);
-
-			foreach ($tmpHeaderStructure as $arCurrentByteCode)
+			$packetMap = $this->getMap(TRUE); //Получаем текущую детальную побайтовую карту
+			
+			for ($i; $packetMap[$i] !== NULL; $i++)
 			{
-				switch($arCurrentByteCode)
+				switch($packetMap[$i])
 				{
 					case 1: //Обрабатываем байт инструкции
-						$this->ParseInstruction($arPacketBytes[$i]);
-						$tmpHeaderStructure = $this->getMap(TRUE);
-						break;
-					case 4: //Обрабатываем байт статуса
-						$this->ParseStatus($arPacketBytes[$i]);
+						$this->ParseInstruction($arPacket[$i]);
+						return $this->parse($i + 1);
 						break;
 					case 2:
 						
 						break;
+					case 4: //Обрабатываем байт статуса
+						$this->ParseStatus($arPacket[$i]);
+						return $this->parse($i + 1);
+						break;
+					
 					default:
 						break;
 				}
-				$i++;
 			}
-			var_dump($tmpHeaderStructure);
+			
+			var_dump($packetMap);
+			echo count($packetMap) . "<br>";
 			return $this->getResult();
 		}
 		
@@ -198,8 +202,6 @@
 				###################Определяем тип пакета###################
 				if ($instrBin[1]) //Пакет команды
 				{
-					$this->setResult("Command packet");
-					
 					switch($instrBin[6] . $instrBin[7]) //Если это пакет команды, то он может содержать байты адреса доставки. Считаем их количество.
 					{
 						case '00':
@@ -217,28 +219,25 @@
 					}
 					$this->FullHeaderStructure[4]['length'] = $len;
 					$this->setResult("Reply address length:\t$len");
+					
 				}
 				else //Пакет ответа
 				{
-					$this->setResult("Reply packet");
-					
 					$this->FullHeaderStructure[3]['type'] = 4; //Устанавливаем в 4 позицию поле Status 
 					
 					$this->FullHeaderStructure[4]['length'] = 0;
 					
 					if ($instrBin[2]) //Если это пакет ответа на команду записи, то он имеет короткий конец.
 					{
-						$this->setResult("Write");
 						for ($i = 7; $i < 10; $i++) //Обнуляем все значения до Header CRC
 						{
 							$this->FullHeaderStructure[$i] = 0;
 						}
 					}
-					else
-						$this->setResult("Read");
 				}
 				##########################################################
 	
+				
 				$command = $instrBin[2] . $instrBin[3] . $instrBin[4] . $instrBin[5];
 				$error = array_search($command, RMAP::$errCommand);
 				
@@ -248,8 +247,8 @@
 					$this->setResult("Packet type:\tRead-Modify-Write");
 				else
 				{
-					//$instrBin[1] == 0 ? $this->setResult("Reply packet")	: $this->setResult("Command packet");
-					//$instrBin[2] == 0 ? $this->setResult("Read")			: $this->setResult("Write");
+					$instrBin[1] == 0 ? $this->setResult("Reply packet")	: $this->setResult("Command packet");
+					$instrBin[2] == 0 ? $this->setResult("Read")			: $this->setResult("Write");
 					$instrBin[3] == 0 ? $this->setResult("Don't verify")	: $this->setResult("Verify data");
 					$instrBin[4] == 0 ? $this->setResult("No reply")		: $this->setResult("Reply");
 					$instrBin[5] == 0 ? $this->setResult("No inrement")		: $this->setResult("Increment");
@@ -257,7 +256,7 @@
 			}
 			
 			//var_dump($this->FullHeaderStructure);
-			foreach ($this->FullHeaderStructure as $arValue)
+			/* foreach ($this->FullHeaderStructure as $arValue)
 			{
 				$tmp = "";
 				$sumLength += (int)$arValue['length'];
@@ -268,7 +267,7 @@
 				echo $tmp . "<br>";
 			}
 			echo "Length in bytes: " . $sumLength . "<br>";
-			echo "Instruction byte: " . $instrBin . "<br>";
+			echo "Instruction byte: " . $instrBin . "<br>"; */
 		}
 		
 		private function ParseStatus($statByte)
@@ -279,15 +278,19 @@
 			isset($arStatus) ? $this->setResult($tmp . $arStatus["error"]) : $this->setResult($tmp . "Status not defined");
 		}
 		
-		
+		private function ParseStatus($arDataBytes)
+		{
+			
+		}
 		##############################################################################################################################
 	}
 	
 	################################################################
 	error_reporting(0);
 	
-	$testPack = 'fe 01 6c 00 67 00 a0 00 00 00 00 00';
-	$testPack = 'fe 01 38 00 67 00 a0 CRC <EOP>'; // Ответ на команду записи
+	$testPack = 'fe 01 6c 00 67 00 00 00 a0 00 00 00 00 00 10 aa 01 23 45 67 89 ab cd ef 10 11 12 13 14 15 16 17 bb <EOP>';
+	//$testPack = 'fe 01 38 00 67 00 a0 CRC <EOP>'; // Ответ на команду записи
+	//$testPack = 'fe 01 6c 00 67 00 a0 00 00 00 00 00';
 	
 	$foo = Packet::Factory($testPack);
 	var_dump($foo->parse());
