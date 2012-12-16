@@ -9,45 +9,48 @@
 	define(HEX, '0x');
 	define(ASCII, "'");
 	
-	$erTABLE[] = array('code' => '00', 'appl' => '111', 'error' => 'Command executed successfully');
-	$erTABLE[] = array('code' => '01', 'appl' => '111', 'error' => 'General error code');
-	$erTABLE[] = array('code' => '02', 'appl' => '111', 'error' => 'Unused RMAP Packet Type or Command Code');
-	$erTABLE[] = array('code' => '03', 'appl' => '111', 'error' => 'Invalid key');
-	$erTABLE[] = array('code' => '04', 'appl' => '101', 'error' => 'Invalid Data CRC');
-	$erTABLE[] = array('code' => '05', 'appl' => '111', 'error' => 'Early EOP');
-	$erTABLE[] = array('code' => '06', 'appl' => '111', 'error' => 'Too much data');
-	$erTABLE[] = array('code' => '07', 'appl' => '111', 'error' => 'EEP');
-	$erTABLE[] = array('code' => '08', 'appl' => '000', 'error' => 'Reserved');
-	$erTABLE[] = array('code' => '09', 'appl' => '101', 'error' => 'Verify buffer overrun');
-	$erTABLE[] = array('code' => '10', 'appl' => '111', 'error' => 'RMAP Command not implemented or not authorised');
-	$erTABLE[] = array('code' => '11', 'appl' => '001', 'error' => 'RMW Data Length error');
-	$erTABLE[] = array('code' => '12', 'appl' => '111', 'error' => 'Invalid Target Logical Address');
-	
 	$erCommand[] = '0000';
 	$erCommand[] = '0001';
 	$erCommand[] = '0100';
 	$erCommand[] = '0101';
 	$erCommand[] = '0110';
 	#####################
-	
-	/*foreach($erTABLE as $value)
-	{
-		echo "<p>". $value['code'] . " " . $value['appl'] . " " . $value['error'];
-	}*/
-	
+
 	##Формирование строки оригинального пакета из формы##
 	
 	foreach ($_POST as $key => $value)
 	{
-		if (substr_count($key, "instr"))
-			$instr .= $value;
-		elseif (substr_count($key, "opt"))
+		if (substr_count($key, "options"))
 			$arOptions["$key"] = $value;
 		else
-			$original_pack .= $key . ":\t" . $value . "\n";
+		{
+			$arElementNameCat = explode(":", $key);
+			if ($arElementNameCat[2]== "instr")
+				$instr .= $value;
+			else 
+			{
+				$arPacket["{$arElementNameCat[0]}"] = [$value, $arElementNameCat];
+			}
+			
+		}
+	}
+	$arPacket['02'] = $instr;
+	
+	ksort($arPacket, SORT_NUMERIC);
+	
+	foreach ($arPacket as $arValue)
+	{
+			$original_pack .= $arValue[1][0] . ":\t" . $arValue[0] . "\n";
 	}
 	
-	$original_pack .= "Instr:\t" . BIN . $instr . "\t" . HEX . base_convert($instr, 2, 16) . "\n";
+	$original_pack .= "\n\n";
+	
+	foreach ($arPacket as $key => $value)
+	{
+		$original_pack .= $value . " ";
+	}
+	
+	//$original_pack .= "Instr:\t" . BIN . $instr . "\t" . HEX . base_convert($instr, 2, 16) . "\n";
 	#####################################################
 	
 	if (isset($_GET['gen']))
