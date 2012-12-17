@@ -1,7 +1,7 @@
 <?php 
 	class Packet //!!Все внутренние массивы хранят hex-значения!!
 	{	
-		private $arResult; //Хранит массив строк-сведений о пакете
+		private  $arResult; //Хранит массив строк-сведений о пакете
 		private $packetString; //Хранит пакет в строковом представлении
 		private $packetArray; //Хранит побайтовый массив пакета
 		
@@ -37,9 +37,10 @@
 		}
 		
 		##################################################Методы доступа##################################################
-		protected function setResult($str)
+		protected function setResult($result, $arrayName = NULL)
 		{
-			$this->arResult[] = $str;
+			$arrayName ? $this->arResult[$arrayName][] = $result : $this->arResult[] = $result;
+			
 			return $this->arResult;
 		}
 		
@@ -84,7 +85,7 @@
 		function __construct($packStr)
 		{
 			parent::__construct($packStr);
-			$this->setResult("Protocol:\tRMAP");
+			
 		}
 		
 		static $errTable = [
@@ -114,21 +115,26 @@
 		4 =>	'Status',
 				'Initiator Logical Adress',
 		2 =>	'Data Length',
-		3 =>	'Header CRC'
+		3 =>	'Header CRC',
+		5 =>	'Data'
 		];
 		
 		private $FullHeaderStructure = [ 			//Массив, содержащий МАКСИМАЛЬНОЕ число различных типов байтов заголовока. 
-		['type' => 0, 'length' => 1],		// Target Logical Address
-		['type' => 0, 'length' => 1],		// Protocol ID
-		['type' => 1, 'length' => 1],		// Instruction
-		['type' => 0, 'length' => 1],		// Key|Status - по умолчанию стоит в положении ноль, т.к. ориентирована на пакет записи (содержащий Key)
-		['type' => 0, 'length' => 0],		// Reply Address
-		['type' => 0, 'length' => 1],		// Initiator|Target Logical Address
-		['type' => 0, 'length' => 2],		// Transaction ID
-		['type' => 0, 'length' => 1],		// Extended Address|Reserved = 0(byte)
-		['type' => 0, 'length' => 4],		// Address
-		['type' => 2, 'length' => 3],		// Data Length
-		['type' => 3, 'length' => 1]		// Header CRC
+		0	=> ['type' => 0, 'length' => 1],		// Target Logical Address
+		1	=> ['type' => 0, 'length' => 1],		// Protocol ID
+		2	=> ['type' => 1, 'length' => 1],		// Instruction
+		3	=> ['type' => 0, 'length' => 1],		// Key|Status - по умолчанию стоит в положении ноль, т.к. ориентирована на пакет записи (содержащий Key)
+		4	=> ['type' => 0, 'length' => 0],		// Reply Address
+		5	=> ['type' => 0, 'length' => 1],		// Initiator|Target Logical Address
+		6	=> ['type' => 0, 'length' => 2],		// Transaction ID
+		7	=> ['type' => 0, 'length' => 1],		// Extended Address|Reserved = 0(byte)
+		8	=> ['type' => 0, 'length' => 4],		// Address
+		9	=> ['type' => 2, 'length' => 3],		// Data Length
+		10	=> ['type' => 3, 'length' => 1],		// Header CRC
+		11	=> ['type' => 5, 'length' => 0],		// Data
+		12	=> ['type' => 0, 'length' => 0],		// Mask
+		13	=> ['type' => 0, 'length' => 1],		// Data CRC
+		14	=> ['type' => 0, 'length' => 0]			// EOP - по умолчанию отсутствует, в предположении что не возвращается программой (Conformance Tester)
 		];
 		
 		
@@ -166,8 +172,14 @@
 						$this->ParseInstruction($arPacket[$i]);
 						return $this->parse($i + 1);
 						break;
-					case 2:
-						
+					case 2: //Обрабатываем 3 байта описывающих длину данных
+						$tmp = [$arPacket[$i], $arPacket[$i + 1], $arPacket[$i + 2]];
+						$this->ParseData($tmp);
+						return $this->parse($i + 3);
+						break;
+					case 5:
+						$this->ParseData($arPacket[$i]);
+						return $this->parse($i + 1);
 						break;
 					case 4: //Обрабатываем байт статуса
 						$this->ParseStatus($arPacket[$i]);
@@ -179,23 +191,36 @@
 				}
 			}
 			
-			var_dump($packetMap);
-			echo count($packetMap) . "<br>";
+			$this->setResult("Protocol:\tRMAP");
+			
+			//var_dump($this->getMap());
+			
+			/* for ($i=0 ; $i < count($packetMap) ; $i++)
+			{
+				echo $i . " ";
+			}
+			echo "<br>";*/
+			foreach ($packetMap as $value)
+			{
+				echo $value . " ";
+			}
+			echo "<p>Packet Map Length: " . count($packetMap) . "</p>";
+			echo "Packet Length: " . count($arPacket) . "<br>";
 			return $this->getResult();
 		}
 		
 		##################################################Функции детального анализа##################################################
 		private function ParseInstruction($instrByte) 
 		{
-			//Изменить вывод на табличныйа не напрямую в результаты
+			//Изменить вывод на табличный, а не напрямую в результаты
 			//Добавить разбиение на 3 типа вместо одной строки?
 			$instrBin = sprintf("%08d", base_convert($instrByte, 16, 2));
-			
-			
+			$arPacketMask; //Часть маски пакета (соотв. заголовочным байтам) которая наложится на "максимальную" структуру пакета, и образует тем самым карту текущего пакета
 			
 			if ($instrBin[0]) //Если резервный бит равен единице - дальнейший анализ бессмысленен
 			{
-				 $this->setResult("Error:\tPacket Type (invalid reserved bit)");
+				 $this->setResult("Invalid instruction reserved bit", 'Errors');
+				 unset($this->FullHeaderStructure);
 			}
 			else 
 			{
@@ -275,22 +300,47 @@
 			$tmp = "Status:\t";
 			$statDec = base_convert($statByte, 16, 10);
 			$arStatus = RMAP::$errTable[$statDec];
-			isset($arStatus) ? $this->setResult($tmp . $arStatus["error"]) : $this->setResult($tmp . "Status not defined");
+			isset($arStatus) ? $this->setResult("Status:\t{$arStatus['error']}") : $this->setResult("Status:\tStatus not defined");
 		}
 		
-		private function ParseStatus($arDataBytes)
+		private function ParseData($data)
 		{
-			
+			if (is_array($data))
+			{
+				####################################Составление числа содержащего длинну поля данных#################################
+				//Добавить нормальный разбор байтов (Сейчас кушает только максимальный)
+				foreach ($data as &$value)
+				{
+					$value = (int)base_convert($value, 16, 10);
+					//echo $value ."<br>";
+					//$dataLength += base_convert($statByte, 16, 10);
+				}
+				$dataLength = max($data);
+				echo "Data Length: " . $dataLength ."<br>";
+				#####################################################################################################################
+				
+				$this->FullHeaderStructure[11] = ['type' => 5, 'length' => $dataLength];
+				
+				
+				return $dataLength;
+			}
+			else 
+			{
+				$this->setResult($data, 'data');
+				return $arDataTmp['data'];
+			}
 		}
-		##############################################################################################################################
 	}
 	
 	################################################################
+	
 	error_reporting(0);
+	header('Content-Type: text/html; charset=utf-8');
 	
 	$testPack = 'fe 01 6c 00 67 00 00 00 a0 00 00 00 00 00 10 aa 01 23 45 67 89 ab cd ef 10 11 12 13 14 15 16 17 bb <EOP>';
 	//$testPack = 'fe 01 38 00 67 00 a0 CRC <EOP>'; // Ответ на команду записи
 	//$testPack = 'fe 01 6c 00 67 00 a0 00 00 00 00 00';
+	//$testPack = 'fe 01 80 00 67 00 a0 00 00 00 00 00';
 	
 	$foo = Packet::Factory($testPack);
 	var_dump($foo->parse());
