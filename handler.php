@@ -1,20 +1,14 @@
 <?php
+	require_once 'parser.php';
+	
 	header('Content-Type: text/html; charset=utf-8');
 	error_reporting(0);
 	
-	##Таблицы сравнений##
 	define(BIN, '0b');
 	define(OCT, '0o');
 	define(DEC, '0d');
 	define(HEX, '0x');
 	define(ASCII, "'");
-	
-	$erCommand[] = '0000';
-	$erCommand[] = '0001';
-	$erCommand[] = '0100';
-	$erCommand[] = '0101';
-	$erCommand[] = '0110';
-	#####################
 
 	##Формирование строки оригинального пакета из формы##
 	
@@ -55,6 +49,18 @@
 	
 	if (isset($_GET['gen']))
 		include 'forms/pack_gen_form.inc';
+	elseif (isset($_GET['parse']))
+	{
+		if ($_POST['packet'])
+		{
+			$packetObj = Packet::Factory($_POST['packet']);
+			$packetObj->parse();
+			$packetObj->showResult();
+		}
+		else
+			echo "<h2>Wrong Packet Input</h2>";
+		echo '<p><a href="index.php?parse" style="text-decoration: none"><input type="button" value="Back" /></a></p>';
+	}
 	else
 		include 'forms/pack_compare_form.inc';
 ?>
