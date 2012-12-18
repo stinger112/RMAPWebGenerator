@@ -23,7 +23,7 @@
 				$instr .= $value;
 			else 
 			{
-				$arPacket["{$arElementNameCat[0]}"] = [$value, $arElementNameCat];
+				$arPacket[$arElementNameCat[0]] = array($value, $arElementNameCat);
 			}
 			
 		}
@@ -43,7 +43,7 @@
 	{
 		$original_pack .= $value . " ";
 	}
-	
+
 	//$original_pack .= "Instr:\t" . BIN . $instr . "\t" . HEX . base_convert($instr, 2, 16) . "\n";
 	#####################################################
 	
@@ -53,7 +53,7 @@
 	{
 		if ($_POST['packet'])
 		{
-			$packetObj = Packet::Factory($_POST['packet']);
+			$packetObj = Packet::Factory(trim($_POST['packet']));
 			$packetObj->parse();
 			$packetObj->showResult();
 		}
