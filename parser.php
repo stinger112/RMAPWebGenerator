@@ -81,7 +81,7 @@
 			return $this->packetArray;
 		}
 		##################################################################################################################
-		public function compare()
+		public function compare(Packet $PacketForCompare)
 		{
 			
 		}
@@ -165,65 +165,89 @@
 		
 		##############################################################################################################
 		
-		public function parse($i = 0) //Рекурсивный парсер. Работает с отрезками развернутой карты, содержащими ненулевые значения.
+		public function parse($posInMap = 0) //Рекурсивный парсер. Работает с отрезками развернутой карты, содержащими ненулевые значения.
 		{
 			$arPacket = $this->PacketArray();
 			
-			$packetMap = $this->getMap(TRUE); //Получаем текущую детальную побайтовую карту
+			$arMap = $this->getMap(); //Получаем текущую карту
 			
-			for ($i; $packetMap[$i] !== NULL; $i++)
+			$handlerName; //Имя обработчика (можно напрямую брать из $arMap)
+			
+			for ($posInPacket = 0, $c = 0; $c < $posInMap; $c++) //Считаем текущую позицию байта в пакете
 			{
-				switch($packetMap[$i])
-				{
-					case 1: //Обрабатываем байт инструкции
-						$this->ParseInstruction($arPacket[$i]);
-						return $this->parse($i + 1);
-						break;
-					case 2: //Обрабатываем 3 байта описывающих длину данных
-						$tmp = array($arPacket[$i], $arPacket[$i + 1], $arPacket[$i + 2]);
-						$this->ParseData($tmp);
-						return $this->parse($i + 3);
-						break;
-					case 5:
-						$this->ParseData($arPacket[$i]);
-						return $this->parse($i + 1);
-						break;
-					case 4: //Обрабатываем байт статуса
-						$this->ParseStatus($arPacket[$i]);
-						return $this->parse($i + 1);
-						break;
-					
-					default:
-						break;
-				}
+				$posInPacket += $arMap[$c]['length'];
 			}
+
+			echo "Position in map: $posInMap<br>";
+			echo "Position in packet: $posInPacket<br>";
+			
+			//var_dump($arMap[$posInMap]['type']);
+			
+			switch(TRUE) //Дешифровка типа
+			{
+				case ($arMap[$posInMap]['type'] === 1): //Обрабатываем байт инструкции
+					$handlerName = 'Instruction';
+					break;
+					
+				case ($arMap[$posInMap]['type'] === 2): //Обрабатываем 3 байта описывающих длину данных
+					$handlerName = 'DataLength';
+					break;
+					
+				case ($arMap[$posInMap]['type'] === 5): //Обрабатываем байт данных
+					$handlerName = 'Data';
+					break;
+					
+				case ($arMap[$posInMap]['type'] === 4): //Обрабатываем байт статуса
+					$handlerName = 'Data';
+					break;
+					
+				case ($arMap[$posInMap]['type'] === 0): 
+					$handlerName = 'Undefined';
+					break;
+					
+				default:
+					$handlerName = 'Exit';
+					break;
+			}
+
+			//var_dump($arMap);
+			
+			if (is_callable(array($this, "Parse$handlerName")))
+			{
+				$handlerName = "Parse$handlerName";
+				
+				if ($arMap[$posInMap]['length'] > 1)
+					$arCurrentPacketBytes = array_slice($arPacket, $posInPacket, $arMap[$posInMap]['length']); //Выделяем байты пакета от начала и до конца текущей позиции карты
+				else
+					$arCurrentPacketBytes = $arPacket[$posInPacket];
+				
+				echo $handlerName . "<br>";
+				call_user_func(array($this, $handlerName), $arCurrentPacketBytes); //Если слишком много данных, вызовется функция без параметра. К чему это приведет - неясно
+				
+				return $this->parse($posInMap + 1);
+			}
+			elseif ($handlerName === 'Undefined') //Если обработчик неопределен - переходим на следующую позицию $arMap (можно сделать метод compressMap, который будет удалять необр. значения)
+				return $this->parse($posInMap + 1);
 			
 			$this->setResult("Packet length:\t" . count($arPacket));
 			$this->setResult("Protocol:\tRMAP");
 			
-			if ($packetMap) //Если $packetMap = NULL, то уже была обнаружена другая ошибка
+			echo "Packet pos: $posInPacket";
+			
+			if ($arMap) //Если $arMap = NULL, то уже была обнаружена другая ошибка
 			{
-				if (count($packetMap) > count($arPacket)) //Слишком много данных
+				if ($posInPacket > count($arPacket)) //Слишком много данных
 				{
 					$this->setResult(RMAP::$errTable[5]['error'], 'error');
 					unset($this->packetMap);
 				}
-				elseif (count($packetMap) < count($arPacket)) //Раннее завершение передачи
+				elseif ($posInPacket < count($arPacket)) //Раннее завершение передачи
 				{
-					/* Немного обмана: ошибка бросается при несоответствии длин пакета и карты, а не при получении символа EOP.
-					 * Однако по большому счету в данном случае разницы нет, т.к. обмен осуществляется через внешний интерфейс.
-					* В текущей реализации данная ошибка будет выпадать всегда, особенно при ошибках создания карты. */
 					$this->setResult(RMAP::$errTable[6]['error'], 'error');
 					unset($this->packetMap);
 				}
 			}
 			
-			/* foreach ($packetMap as $value)
-			{
-				echo $value . " ";
-			}
-			
-			echo "<p>Packet Map Length: " . count($packetMap) . "</p>"; */
 			return $this->getResult();
 		}
 		
@@ -345,42 +369,70 @@
 			isset($arStatus) ? $this->setResult("Status:\t{$arStatus['error']}") : $this->setResult("Status:\tStatus not defined");
 		}
 		
-		private function ParseData($data)
+		private function ParseDataLength($arDataLengthBytes) //Выяснить правильность составления числа!!
 		{
 			//Не сделан анализ маски для частного случае RMW
-			if (is_array($data))
+			if (is_array($arDataLengthBytes))
 			{
-				####################################Составление числа содержащего длинну поля данных#################################
-				//Добавить нормальный разбор байтов (Сейчас кушает только максимальный)
-				foreach ($data as &$value)
+				foreach ($arDataLengthBytes as $value) //Правильно ли составлено результирующее hex число байтов? Составляется простой конкатенацией
 				{
-					$value = (int)base_convert($value, 16, 10);
-					//echo $value ."<br>";
-					//$dataLength += base_convert($statByte, 16, 10);
+					$dataLength .= $value;
 				}
-				$dataLength = max($data);
+				$dataLength = (int)base_convert($dataLength, 16, 10);
 				
-				if ($dataLength)
+				if ($dataLength != 0)
+				{
+					$arMap[] = array('type' => 5, 'length' => $dataLength);	//Data
 					$this->setResult("Data length:\t$dataLength");
-				#####################################################################################################################
+				}
 				
-				$arMap = array(
-				array('type' => 5, 'length' => $dataLength),	//Data
-				array('type' => 6, 'length' => 1),				//Data CRC
-				);
+				$arMap[] = array('type' => 0, 'length' => 1);			//Data CRC
 				
 				$this->updateMap($arMap);
 			}
-			else 
+		}
+		
+		private function HeaderCRC()
+		{
+			$RMAP_CRCTable = array(
+			'00', '91', 'e3', '72', '07', '96', 'e4', '75', '0e', '9f', 'ed', '7c',
+			'09', '98', 'ea', '7b', '1c', '8d', 'ff', '6e', '1b', '8a', 'f8', '69', '12', '83', 'f1', '60', '15',
+			'84', 'f6', '67', '38', 'a9', 'db', '4a', '3f', 'ae', 'dc', '4d', '36', 'a7', 'd5', '44', '31', 'a0',
+			'd2', '43', '24', 'b5', 'c7', '56', '23', 'b2', 'c0', '51', '2a', 'bb', 'c9', '58', '2d', 'bc', 'ce',
+			'5f', '70', 'e1', '93', '02', '77', 'e6', '94', '05', '7e', 'ef', '9d', '0c', '79', 'e8', '9a', '0b',
+			'6c', 'fd', '8f', '1e', '6b', 'fa', '88', '19', '62', 'f3', '81', '10', '65', 'f4', '86', '17', '48',
+			'd9', 'ab', '3a', '4f', 'de', 'ac', '3d', '46', 'd7', 'a5', '34', '41', 'd0', 'a2', '33', '54', 'c5',
+			'b7', '26', '53', 'c2', 'b0', '21', '5a', 'cb', 'b9', '28', '5d', 'cc', 'be', '2f', 'e0', '71', '03',
+			'92', 'e7', '76', '04', '95', 'ee', '7f', '0d', '9c', 'e9', '78', '0a', '9b', 'fc', '6d', '1f', '8e',
+			'fb', '6a', '18', '89', 'f2', '63', '11', '80', 'f5', '64', '16', '87', 'd8', '49', '3b', 'aa', 'df',
+			'4e', '3c', 'ad', 'd6', '47', '35', 'a4', 'd1', '40', '32', 'a3', 'c4', '55', '27', 'b6', 'c3', '52',
+			'20', 'b1', 'ca', '5b', '29', 'b8', 'cd', '5c', '2e', 'bf', '90', '01', '73', 'e2', '97', '06', '74',
+			'e5', '9e', '0f', '7d', 'ec', '99', '08', '7a', 'eb', '8c', '1d', '6f', 'fe', '8b', '1a', '68', 'f9',
+			'82', '13', '61', 'f0', '85', '14', '66', 'f7', 'a8', '39', '4b', 'da', 'af', '3e', '4c', 'dd', 'a6',
+			'37', '45', 'd4', 'a1', '30', '42', 'd3', 'b4', '25', '57', 'c6', 'b3', '22', '50', 'c1', 'ba', '2b',
+			'59', 'c8', 'bd', '2c', '5e', 'cf' );
+			
+			$crc = '00';
+			
+			for ($i = 0; $i < $length; $i++)
 			{
-				$this->setResult($data, 'data');
+				$crc = $RMAP_CRCTable[($crc ^ $data[i]) & 'ff'];
+			}
+			return crc;
+		}
+		
+		private function ParseData($arDataBytes) //Наполняет массив результатов байтами данных
+		{
+			foreach($arDataBytes as $value)
+			{
+				$this->setResult($value, 'data');
 			}
 		}
 	}
 	
 	################################################################
 	
-	error_reporting(0);
+	error_reporting(E_ALL);
 	header('Content-Type: text/html; charset=utf-8');
 	
 	####################Правильные пакеты####################
