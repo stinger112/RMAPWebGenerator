@@ -12,7 +12,7 @@
 
 	##Формирование строки оригинального пакета из формы##
 	
-	foreach ($_POST as $key => $value)
+	/* foreach ($_POST as $key => $value)
 	{
 		if (substr_count($key, "options"))
 			$arOptions["$key"] = $value;
@@ -42,7 +42,7 @@
 	foreach ($arPacket as $key => $value)
 	{
 		$original_pack .= $value . " ";
-	}
+	} */
 
 	//$original_pack .= "Instr:\t" . BIN . $instr . "\t" . HEX . base_convert($instr, 2, 16) . "\n";
 	#####################################################
@@ -59,8 +59,41 @@
 		}
 		else
 			echo "<h2>Wrong Packet Input</h2>";
+		
 		echo '<p><a href="index.php?parse" style="text-decoration: none"><input type="button" value="Back" /></a></p>';
 	}
+	elseif (isset($_GET['compare']))
+	{
+		if ($_POST['original_pack'] && $_POST['received_pack'])
+		{
+	
+			$firstPacket = Packet::Factory(trim($_POST['original_pack']));
+			$secondPacket = Packet::Factory(trim($_POST['received_pack']));
+			
+			$compareResult = $firstPacket->compare($secondPacket);
+			
+			if (is_array($compareResult))
+			{
+				echo "First diverging bytes: ";
+				foreach ($compareResult as $value)
+				{
+					echo $value . ' ';
+				}
+			}
+			elseif ($compareResult === FALSE)
+				echo "<h2>Packets have divergence!</h2>";
+			elseif ($compareResult === NULL)
+				echo "<h2>Packets occurrence completely!</h2>";
+
+		}
+		else
+			echo "<h2>Wrong Packets Input</h2>";
+		
+		echo '<p><a href="index.php?compare" style="text-decoration: none"><input type="button" value="Back" /></a></p>';
+	}
 	else
-		include 'forms/pack_compare_form.inc';
+	{
+		header('Location: index.php');
+	}
+		
 ?>

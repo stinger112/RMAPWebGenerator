@@ -53,7 +53,8 @@
 		</p>
 			<div id="buttons"><p>
 			<input type="submit" value="Generate">
-			<input type="reset" value="Defaults"></p>
+			<input type="reset" value="Defaults">
+			<a href="index.php" style="text-decoration: none"><input type="button" value="Back"></a></p>
 			</div>
 		</div>
 	</div>
