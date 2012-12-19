@@ -31,9 +31,9 @@
 		<h2>Body:</h2>
 		<p><textarea name="body" rows="10" placeholder="Данные"></textarea></p>
 		<p><input type="text" name="data_crc"	disabled> Data CRC field (8 bit)
-		<p>
+		<!-- <p>
 		<input name="end_char" type="radio" value="EOP" checked disabled> EOP
-		<input name="end_char" type="radio" value="EEP" disabled> EEP
+		<input name="end_char" type="radio" value="EEP" disabled> EEP -->
 		</p></div>
 		
 		<div id="options">

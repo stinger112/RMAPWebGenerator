@@ -19,17 +19,19 @@ function opt_err_type() {
 	});
 }
 
-function fill(data) {
+function fill_from_template(data) {
 	
 }
 
 function main() {
 
+	/*---------------------Events handling---------------------*/
+	
 	$("input[name='options:error:allow']").change(opt_error);
 	$("select[name='options:error:type']").change(opt_err_type);
-	
 	$("select[name='options:error:type']").change(opt_err_type);
 	
+	/*---------------------------------------------------------*/
 }
 
-$(main); //Точка входа
+$(main); //Entering Point

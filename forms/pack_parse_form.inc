@@ -11,7 +11,7 @@
 <body>
 	<div id="form">
 	<form action="handler.php?parse" method="POST">
-	<textarea name="packet" cols="40" rows="30" placeholder="Insert packet"></textarea>
+	<textarea name="packet" cols="40" rows="30" placeholder="Insert packet"><?php if (isset($included_pack)) echo $included_pack ?></textarea>
 	<p><input type="submit" value="Parse"></p>
 	</form>
 	</div>

@@ -6,7 +6,7 @@
 	{
 		foreach (RMAP::$errTable as $arValue)
 		{
-			if (($i != 0) && ($i != 8))
+			if ((0 != $i) && (8 != $i))
 				echo '<option value="'. $i .'">' . $arValue['error'] . "</option>\n";
 			
 			$i++;

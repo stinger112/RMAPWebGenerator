@@ -48,7 +48,9 @@
 	#####################################################
 	
 	if (isset($_GET['gen']))
-		include 'forms/pack_gen_form.inc';
+	{
+		include 'forms/pack_parse_form.inc';
+	}
 	elseif (isset($_GET['parse']))
 	{
 		if ($_POST['packet'])
