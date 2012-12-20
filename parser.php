@@ -1,9 +1,10 @@
-<?php 
+<?php
 
 	class Packet //!!Все внутренние массивы хранят hex-значения!!
 	{	
-		private $arResult; //Хранит массив строк-сведений о пакете
-		private $arPacket; //Хранит побайтовый массив пакета
+		private $arPacket;		//This array contain original packet array
+		private $arResult;		//This array contain parse results
+		private $arParseErrors;	//This array contain parse errors
 		
 		protected function __construct($packStr)
 		{
@@ -34,7 +35,7 @@
 				throw new RuntimeException("Packet didn't created (wrong string received)");
 		}
 		
-		##################################################Методы доступа##################################################
+		##################################################Access Methods##################################################
 		protected function setResult($result, $arrayName = NULL)
 		{
 			$arrayName ? $this->arResult[$arrayName][] = $result : $this->arResult[] = $result;
@@ -49,27 +50,46 @@
 		
 		public function showResult() //Отображает результаты в браузер
 		{
+			echo "<h3>Parse results:</h3>";
 			foreach($this->getResult() as $key => $valueExt)
 			{
 				if (is_array($valueExt))
 				{
-					echo "<font color='red'>$key: </font>";
+					echo "<font color='blue'>$key: </font>";
 					foreach ($valueExt as $valueInt)
 					{
-					echo "$valueInt ";
+						echo "$valueInt ";
 					}
-					echo "<br>";
 				}
 				else
-					echo "$valueExt<br>";
+					echo "$valueExt";
+				echo '<br>';
+			}
+			if (is_array($this->getParseErrors()))
+			{
+				echo "<h3>Detected parse errors:</h3>";
+				foreach ($this->getParseErrors() as $value)
+				{
+					echo "<font color='red'>$value<br></font>";
+				}
 			}
 		}
 				
-		protected function PacketArray($arPack = NULL) //Универсальный метод доступа к массиву пакета
+		protected function PacketArray($arPack = NULL) //Universal access method for Packet array
 		{
 			if ($arPack)
 				$this->arPacket = $arPack;
 			return $this->arPacket;
+		}
+		
+		protected function getParseErrors()
+		{
+			return $this->arParseErrors;
+		}
+		
+		protected function addError($errString)
+		{
+			$this->arParseErrors[] = $errString;
 		}
 		##################################################################################################################
 		public function compare(Packet $PacketForCompare) //Сравнивает массивы пакетов с конца 
@@ -145,7 +165,7 @@
 		
 		static $protocolID = '01';
 		
-		static $MapCodeTable = array(
+		/* static $MapCodeTable = array(
 		'TargetLogicalAddress'		=> 0,
 		'ProtocolID'				=> 1,
 		'Instruction'				=> 2,
@@ -161,7 +181,7 @@
 		'Data'						=> 12,
 		'Mask'						=> 13,
 		'DataCRC'					=> 14
-		); 
+		);  */
 		
 		
 
@@ -172,56 +192,7 @@
 		array('type' => 'Instruction',			'length' => 1)		// Instruction
 		);
 
-		################################################Методы доступа################################################
-		
-		public function getMap($Decompressed = FALSE) //Возвращает карту пакета (в свернутом виде или побайтовом кодированном виде)
-		{
-			if ($Decompressed)
-			{
-				foreach ($this->packetMap as $arValue)
-				{
-					for ($i=0 ;$i < $arValue['length']; $i++)
-					{
-						$tmpMap[] = RMAP::$MapCodeTable[$arValue['type']];
-					}
-				}
-				return $tmpMap;
-			}
-			else
-				return $this->packetMap;
-		}
-		
-		private function updateMap(array $arMap)
-		{
-			if (key($arMap) !== NULL)
-				$this->packetMap = array_merge($this->packetMap, $arMap);
-		}
-		
-		##############################################################################################################
-		private function getPosition($pointer, $mode = 'number') //Getting position in Packet by Packet Map pointer
-		{
-			$arMap = $this->getMap();
-			
-			if ('type' === $mode)
-			{
-				foreach ($arMap as $i => $arValue)
-				{
-					if ($pointer === $arValue['type'])
-					{
-						$pointer = $i;
-						break;
-					}	
-				}
-			}
-			
-			for ($posInPacket = 0, $c = 0; $c < $pointer; $c++) //Calculate current byte position
-			{
-				$posInPacket += $arMap[$c]['length'];
-			}
-			
-			return $posInPacket;
-		}
-		
+		###############################################Открытые методы################################################
 		static public function calculateCRC (array $arData)
 		{
 			$RMAP_CRCTable = array(
@@ -241,20 +212,93 @@
 					'82', '13', '61', 'f0', '85', '14', '66', 'f7', 'a8', '39', '4b', 'da', 'af', '3e', '4c', 'dd', 'a6',
 					'37', '45', 'd4', 'a1', '30', '42', 'd3', 'b4', '25', '57', 'c6', 'b3', '22', '50', 'c1', 'ba', '2b',
 					'59', 'c8', 'bd', '2c', '5e', 'cf' );
-				
+		
 			$crc = 0;
-			
+		
 			foreach ($arData as $i => $value)
 			{
 				$arData[$i] = (int)base_convert($arData[$i], 16, 10);
 				$crc = (int)base_convert($crc, 16, 10);
-				
+		
 				$crc = $RMAP_CRCTable[$crc ^ $arData[$i]];
 			}
-			
+		
 			return $crc;
 		}
 		
+		public function getMap($mode = NULL) //Возвращает карту пакета (в свернутом виде, развернутом побайтовом кодированном или расшифрованном виде)
+		{
+			/* if ('decompressed' === $mode)
+			{
+				foreach ($this->packetMap as $arValue)
+				{
+					for ($i=0 ;$i < $arValue['length']; $i++)
+					{
+						$tmpMap[] = RMAP::$MapCodeTable[$arValue['type']];
+					}
+				}
+				return $tmpMap;
+			}
+			else*/if ('decoded' === $mode)
+			{
+				$arPacket = $this->PacketArray();
+				$pointer = 0;
+				
+				foreach ($this->packetMap as $arValue)
+				{
+					$tmp = array_slice($arPacket, $this->getPosition($pointer), $arValue['length']);
+					$decodedMap[$arValue['type']] = implode(' ', $tmp);
+					$pointer++;
+				}
+				
+				return $decodedMap;
+			}
+			else
+				return $this->packetMap;
+		}
+		###############################################Support methods################################################
+		private function updateMap(array $arMap)
+		{
+			if (key($arMap) !== NULL)
+				$this->packetMap = array_merge($this->packetMap, $arMap);
+		}
+		
+		private function getPosition($pointer, $mode = 'number') //Getting position in Packet by Packet Map pointer
+		{
+			$arMap = $this->packetMap;
+				
+			if ('type' === $mode)
+			{
+				foreach ($arMap as $i => $arValue)
+				{
+					if ($pointer === $arValue['type'])
+					{
+						$pointer = $i;
+						break;
+					}
+				}
+			}
+				
+			for ($posInPacket = 0, $c = 0; $c < $pointer; $c++) //Calculate current byte position
+			{
+				$posInPacket += $arMap[$c]['length'];
+			}
+				
+			return $posInPacket;
+		}
+		
+		protected function addError($error) //Create error based on string or error number
+		{
+			if (is_int($error))
+			{
+				parent::addError(RMAP::$errTable[$error]['error']);
+			}
+			elseif (is_string($error))
+			{
+				parent::addError($error);
+			}
+		}
+		#############################################Main parse method################################################
 		public function parse($posInMap = 0)
 		{
 			###################################################################################################################################################
@@ -284,24 +328,19 @@
 			###################################################################################################################################################
 			###################################################################################################################################################
 
-			if ($arMap) //Если $arMap = NULL, то уже была обнаружена другая ошибка и проверять окончание бесмысленно
+			if ($this->getParseErrors() === NULL) //Another error detected and check ending unreasonably
 			{
 				if ($posInPacket > count($arPacket))
-				{
-					$this->setResult(RMAP::$errTable[5]['error'], 'error'); //Слишком много данных
-					unset($this->packetMap);
-				}
+					$this->addError(5); //Too much data
+				
 				elseif ($posInPacket < count($arPacket))
-				{
-					$this->setResult(RMAP::$errTable[6]['error'], 'error'); //Раннее завершение передачи
-					unset($this->packetMap);
-				}
+					$this->addError(6); //Early EOP
 			}
 			
 			return $this->getResult();
 		}
 		
-		##################################################Функции детального анализа##################################################		
+		############################################Detail parse methods##############################################		
 		private function ParseInstruction($instrByte) 
 		{
 			$instrBin = sprintf("%08d", base_convert($instrByte, 16, 2));
@@ -311,15 +350,13 @@
 			$command = $instrBin[2] . $instrBin[3] . $instrBin[4] . $instrBin[5];
 			$error = array_search($command, RMAP::$errCommand); //Поиск ошибки команды в массиве ошибок
 			
-			if ($instrBin[0]) //Если резервный бит равен единице - дальнейший анализ бессмысленен
+			if ($instrBin[0])
 			{
-				$this->setResult(RMAP::$errTable[2]['error'], 'error');
-				unset($this->packetMap);
+				$this->addError(2); //Wrong reserved bit
 			}
 			elseif ($instrBin[1] && ($error !== FALSE)) //Если это пакет команды и обнаружена ошибка в блоке команды - дальнейший анализ бессмысленен
 			{
-				$this->setResult(RMAP::$errTable[2]['error'], 'error');
-				unset($this->packetMap);
+				$this->addError(2); //Wrong reserved bit in command byte
 			}
 			else 
 			{
@@ -417,10 +454,10 @@
 			isset($arStatus) ? $this->setResult("Status:\t{$arStatus['error']}") : $this->setResult("Status:\tStatus not defined");
 		}
 		
-		private function ParseDataLength(array $arDataLengthBytes) //Выяснить правильность составления числа!!
+		private function ParseDataLength(array $arDataLengthBytes)
 		{
 			//Не сделан анализ маски для частного случае RMW
-			foreach ($arDataLengthBytes as $value) //Правильно ли составлено результирующее hex число байтов? Составляется простой конкатенацией
+			foreach ($arDataLengthBytes as $value) //Результирующее hex число байтов составляется простой конкатенацией
 			{
 				$dataLength .= $value;
 			}
@@ -440,15 +477,12 @@
 		private function ParseHeaderCRC($crcByte)
 		{	
 			
-			$end = $this->getPosition('HeaderCRC', 'type');
-			$headerBytes = array_slice($this->PacketArray(), 0, $end);
+			$length = $this->getPosition('HeaderCRC', 'type');
+			$headerBytes = array_slice($this->PacketArray(), 0, $length);
 			$crc = $this->calculateCRC($headerBytes);
 			
 			if ($crc !== $crcByte)
-			{
-				$this->setResult('Incorrect Header CRC', 'error');
-				unset($this->packetMap);
-			}
+				$this->addError('Incorrect Header CRC');
 		}
 		
 		private function ParseData($arDataBytes) //Наполняет массив результатов байтами данных
@@ -466,16 +500,13 @@
 		
 		private function ParseDataCRC($crcByte)
 		{
-				
-			$end = $this->getPosition('DataCRC', 'type');
-			$dataBytes = array_slice($this->PacketArray(), 0, $end);
+			$start = $this->getPosition('Data', 'type');	
+			$length = $this->getPosition('DataCRC', 'type') - $start;		
+			$dataBytes = array_slice($this->PacketArray(), $start, $length);
 			$crc = $this->calculateCRC($dataBytes);
-				
+			
 			if ($crc !== $crcByte)
-			{
-				$this->setResult(RMAP::$errTable[4]['error'], 'error');
-				unset($this->packetMap);
-			}
+				$this->addError(4); //Incorrect Data CRC
 		}
 	}
 	
@@ -484,32 +515,29 @@
 	
 	####################Правильные пакеты####################
 	//Пакеты команды
-	
 	//$testPack = 'fe 01 6c 00 67 00 00 00 a0 00 00 00 00 00 10 9f 01 23 45 67 89 ab cd ef 10 11 12 13 14 15 16 17 56'; //Пакет записи с данными
-	
-	
-	
 	//Пакеты ответа
-	//$testPack = 'fe 01 38 00 67 00 a0 CRC'; //Ответ на команду записи
+	//$testPack = 'fe 01 38 00 67 00 a0 74'; //Ответ на команду записи
 	###################НЕПРАВИЛЬНЫЕ пакеты###################
 	//Пакеты команды
 	//$testPack = 'fe 01 6c 00 67 00 00 00 a0 00 00 00 00 00 10 aa 01 23 45 67 89 ab cd ef 10 11 12 13 14 15 16 17 56'; //Пакет записи. Invalid Header CRC.
 	//$testPack = 'fe 01 6c 00 67 00 00 00 a0 00 00 00 00 00 10 9f 01 23 45 67 89 ab cd ef 10 11 12 13 14 15 16 17 bb'; //Пакет записи. Invalid Data CRC.
 	
-	//$testPack = 'fe 01 6c 00 67 00 00 00 a0 00 00 00 00 00 01 9f 01 bb'; //Пакет записи, с 1 байтом данных. Invalid Data CRC
+	//$testPack = 'fe 01 6c 00 67 00 00 00 a0 00 00 00 00 00 01 aa 01 bb'; //Пакет записи, с 1 байтом данных. Invalid Header and Data CRC
 	
 	//$testPack = 'fe 01 6c 00 67 00 00 00 a0 00 00 00 00 00 10 9f 01 23 45 67 89 ab cd ef 10 11 12 13 14 15 16 17 56 ff ff ff ff'; //Пакет записи с данными. Too much data
 	//$testPack = 'fe 01 6c 00 67 00 a0 00 00 00 00 00'; //Пакет записи. Early EOP
 	//$testPack = 'fe 01 80 00 67 00 a0 00 00 00 00 00'; //Пакет записи. Использован зарезервированный бит в блоке команды.
 	//$testPack = 'fe 01 44 00 67 00 a0 00 00 00 00 00'; //Пакет записи. Неправильное значение блока команды.
 	//Пакеты ответа
-	//$testPack = 'fe 01 38 00 67 00 a0'; //Ответ на команду записи. Early EOP
+	$testPack = 'fe 01 38 00 67 00 a0'; //Ответ на команду записи. Early EOP
 	#########################################################
 	
-	//$foo = Packet::Factory($testPack);
-	//var_dump($foo->parse());
+	$foo = Packet::Factory($testPack);
+	var_dump($foo->parse());
 	
-	//$foo->showResult();
+	$foo->showResult();
+	var_dump($foo->getMap('decoded'));
 	
 	/* $first = '11 22 33 44 55 66 77 ff fg fe dr fg hg fd';
 	$second = '11 22 33 44 55 66 77 ff fg fe dr fg hg fd';
