@@ -313,30 +313,25 @@
 			
 			if ($arMap[$posInMap] !== NULL) //Если это условие выполняется, то мы все ещё в пределах карты
 			{
-				if (is_callable(array($this, $handlerName)))
+				if ($arPacket[$posInPacket] !== NULL) //Если мы все ещё читаем пакет
 				{
-					$arCurrentPacketBytes = ($arMap[$posInMap]['length'] > 1) ? array_slice($arPacket, $posInPacket, $arMap[$posInMap]['length']) : $arPacket[$posInPacket];
-
-					//Если слишком много данных, вызовется функция без параметра.
-					//Это приведет к анализу отсутствующих данных.
-					call_user_func(array($this, $handlerName), $arCurrentPacketBytes); 
+					if (is_callable(array($this, $handlerName))) //Если есть обработчик на данный тип поля карты
+					{
+						$arCurrentPacketBytes = ($arMap[$posInMap]['length'] > 1) ? array_slice($arPacket, $posInPacket, $arMap[$posInMap]['length']) : $arPacket[$posInPacket];
+						call_user_func(array($this, $handlerName), $arCurrentPacketBytes); 
+					}
+	
+					return $this->parse($posInMap + 1);
 				}
-
-				return $this->parse($posInMap + 1);
+				else 
+					$this->addError(5); //Early EOP
 			}
-			
 			###################################################################################################################################################
 			###################################################################################################################################################
-
-			if ($this->getParseErrors() === NULL) //Another error detected and check ending unreasonably
-			{
-				if ($posInPacket > count($arPacket))
-					$this->addError(5); //Too much data
-				
-				elseif ($posInPacket < count($arPacket))
-					$this->addError(6); //Early EOP
-			}
 			
+			if ($posInPacket < count($arPacket)) //Check on "Too much data" error
+				$this->addError(6); 
+
 			return $this->getResult();
 		}
 		
@@ -482,7 +477,7 @@
 			$crc = $this->calculateCRC($headerBytes);
 			
 			if ($crc !== $crcByte)
-				$this->addError('Incorrect Header CRC');
+				$this->addError('Invalid Header CRC');
 		}
 		
 		private function ParseData($arDataBytes) //Наполняет массив результатов байтами данных
@@ -530,7 +525,7 @@
 	//$testPack = 'fe 01 80 00 67 00 a0 00 00 00 00 00'; //Пакет записи. Использован зарезервированный бит в блоке команды.
 	//$testPack = 'fe 01 44 00 67 00 a0 00 00 00 00 00'; //Пакет записи. Неправильное значение блока команды.
 	//Пакеты ответа
-	$testPack = 'fe 01 38 00 67 00 a0'; //Ответ на команду записи. Early EOP
+	//$testPack = 'fe 01 38 00 67 00 a0'; //Ответ на команду записи. Early EOP
 	#########################################################
 	
 	$foo = Packet::Factory($testPack);
