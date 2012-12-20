@@ -343,103 +343,98 @@
 			$arMap; //Часть карты пакета
 			
 			$command = $instrBin[2] . $instrBin[3] . $instrBin[4] . $instrBin[5];
-			$error = array_search($command, RMAP::$errCommand); //Поиск ошибки команды в массиве ошибок
 			
-			if ($instrBin[0])
+			/* Проверка валидности блока команды */
+			$error = array_search($command, RMAP::$errCommand); //Поиск ошибки команды в массиве ошибок		
+			if ($instrBin[0] || ($instrBin[1] && ($error !== FALSE))) //Использован зарезервированный бит или неверное набор битов в блоке команды
 			{
 				$this->addError(2); //Wrong reserved bit
 			}
-			elseif ($instrBin[1] && ($error !== FALSE)) //Если это пакет команды и обнаружена ошибка в блоке команды - дальнейший анализ бессмысленен
+			/*-----------------------------------*/
+			
+			#########################################################
+			#####################Start create Map####################
+			
+			if ($instrBin[1]) //Command Packet
 			{
-				$this->addError(2); //Wrong reserved bit in command byte
-			}
-			else 
-			{
-				#########################################################
-				#####################Start create Map####################
+				$this->setResult("Packet type:\tCommand packet");
 				
-				if ($instrBin[1]) //Command Packet
+				################Parse command bits###############
+				/* Парсим только в случае, если командный пакет потому что для пакета ответа это бессмысленно (целостность и так проверяется по CRC,
+				а сам блок представляет из себя копию аналогичного отправленного пакета команды) */
+				if ($command == '0111') //Уникальный случай: команда Read-Modify-Write (ещё не включена опция обработки подобных пакетов)
+					$this->setResult("Packet type:\tRead-Modify-Write");
+				else
 				{
-					$this->setResult("Packet type:\tCommand packet");
-					
-					################Parse command bits###############
-					/* Парсим только в случае, если командный пакет потому что для пакета ответа это бессмысленно (целостность и так проверяется по CRC,
-					а сам блок представляет из себя копию аналогичного отправленного пакета команды) */
-					
-					if ($command == '0111') //Уникальный случай: команда Read-Modify-Write (можно отключить, не влияет ни на что)
-						$this->setResult("Packet type:\tRead-Modify-Write");
-					else
-					{
-						$instrBin[2] == 0 ? $this->setResult("Read", 'command')			: $this->setResult("Write", 'command');
-						$instrBin[3] == 0 ? $this->setResult("Don't verify", 'command')	: $this->setResult("Verify data", 'command');
-						$instrBin[4] == 0 ? $this->setResult("No reply", 'command')		: $this->setResult("Reply", 'command');
-						$instrBin[5] == 0 ? $this->setResult("No inrement", 'command')	: $this->setResult("Increment", 'command');
-					}
-					#################################################
+					$instrBin[2] == 0 ? $this->setResult("Read", 'command')			: $this->setResult("Write", 'command');
+					$instrBin[3] == 0 ? $this->setResult("Don't verify", 'command')	: $this->setResult("Verify data", 'command');
+					$instrBin[4] == 0 ? $this->setResult("No reply", 'command')		: $this->setResult("Reply", 'command');
+					$instrBin[5] == 0 ? $this->setResult("No inrement", 'command')	: $this->setResult("Increment", 'command');
+				}
+				#################################################
 
-					$arMap[] = array('type' => 'Key', 'length' => 1); //Key
-						
-					switch($instrBin[6] . $instrBin[7]) //Считываем количество байт адреса ответа
-					{
-						case '00':
-							$len = 0;
-							break;
-						case '01':
-							$len = 4;
-							break;
-						case '10':
-							$len = 8;
-							break;
-						case '11':
-							$len = 12;
-							break;
-					}
-						
-					if ($len != 0)
-					{
-						$arMap[] = array('type' => 'ReplyAddress', 'length' => $len); //Reply Address
-						$this->setResult("Reply address length:\t$len");
-					}
-				}
-				else //Reply Packet
+				$arMap[] = array('type' => 'Key', 'length' => 1); //Key
+				
+				switch($instrBin[6] . $instrBin[7]) //Считываем количество байт адреса ответа
 				{
-					$arMap[] = array('type' => 'Status', 'length' => 1); //Status
-					$this->setResult("Packet type:\tReply packet");
+					case '00':
+						$len = 0;
+						break;
+					case '01':
+						$len = 4;
+						break;
+					case '10':
+						$len = 8;
+						break;
+					case '11':
+						$len = 12;
+						break;
 				}
-				#######################Common############################
-				
-				$arMap[] = array('type' => 'LogicalAddress', 'length' => 1); //Logical Address (отправителя)
-				$arMap[] = array('type' => 'TransactionID', 'length' => 2); //Transaction Identifier
-				
-				#########################################################
-				if ($instrBin[1]) //Пакет команды
+					
+				if ($len != 0)
 				{
-					$arMap[] = array('type' => 'ExtendedAddress', 'length' => 1); //Extended Address
-					$arMap[] = array('type' => 'Address', 'length' => 4); //Address
+					$arMap[] = array('type' => 'ReplyAddress', 'length' => $len); //Reply Address
+					$this->setResult("Reply address length:\t$len");
 				}
-				else //Пакет ответа
-				{
-					if ($instrBin[2]) //Пакет ответа на команду ЗАПИСИ (имеет короткое окончание)
-					{
-						$arMap[] = array('type' => 'HeaderCRC', 'length' => 1); //Header CRC
-						$this->updateMap($arMap);
-						return;
-					}
-					else
-					{
-						$arMap[] = array('type' => 'Reserved', 'length' => 1); //Reserved = 0
-					}
-				}
-				#######################Common############################
-				
-				$arMap[] = array('type' => 'DataLength', 'length' => 3); //Data Length
-				$arMap[] = array('type' => 'HeaderCRC', 'length' => 1); //Header CRC
-				
-				####################End create Map#######################
-				#########################################################
-				
-				$this->updateMap($arMap);
 			}
+			else //Reply Packet
+			{
+				$arMap[] = array('type' => 'Status', 'length' => 1); //Status
+				$this->setResult("Packet type:\tReply packet");
+			}
+			#######################Common############################
+			
+			$arMap[] = array('type' => 'LogicalAddress', 'length' => 1); //Logical Address (отправителя)
+			$arMap[] = array('type' => 'TransactionID', 'length' => 2); //Transaction Identifier
+			
+			#########################################################
+			if ($instrBin[1]) //Пакет команды
+			{
+				$arMap[] = array('type' => 'ExtendedAddress', 'length' => 1); //Extended Address
+				$arMap[] = array('type' => 'Address', 'length' => 4); //Address
+			}
+			else //Пакет ответа
+			{
+				if ($instrBin[2]) //Пакет ответа на команду ЗАПИСИ (имеет короткое окончание)
+				{
+					$arMap[] = array('type' => 'HeaderCRC', 'length' => 1); //Header CRC
+					$this->updateMap($arMap);
+					return;
+				}
+				else
+				{
+					$arMap[] = array('type' => 'Reserved', 'length' => 1); //Reserved = 0
+				}
+			}
+			#######################Common############################
+			
+			$arMap[] = array('type' => 'DataLength', 'length' => 3); //Data Length
+			$arMap[] = array('type' => 'HeaderCRC', 'length' => 1); //Header CRC
+			
+			####################End create Map#######################
+			#########################################################
+				
+			$this->updateMap($arMap);
 		}
 		
 		private function ParseStatus($statByte)
@@ -528,11 +523,11 @@
 	//$testPack = 'fe 01 38 00 67 00 a0'; //Ответ на команду записи. Early EOP
 	#########################################################
 	
-	$foo = Packet::Factory($testPack);
+	/* $foo = Packet::Factory($testPack);
 	var_dump($foo->parse());
 	
 	$foo->showResult();
-	var_dump($foo->getMap('decoded'));
+	var_dump($foo->getMap('decoded')); */
 	
 	/* $first = '11 22 33 44 55 66 77 ff fg fe dr fg hg fd';
 	$second = '11 22 33 44 55 66 77 ff fg fe dr fg hg fd';
