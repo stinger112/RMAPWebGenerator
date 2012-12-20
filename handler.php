@@ -27,14 +27,15 @@
 			}
 			
 		}
-	}
-	$arPacket['02'] = $instr;
+	} */
+	
+	/* $arPacket['02'] = $instr;
 	
 	ksort($arPacket, SORT_NUMERIC);
 	
 	foreach ($arPacket as $arValue)
 	{
-			$original_pack .= $arValue[1][0] . ":\t" . $arValue[0] . "\n";
+		$original_pack .= $arValue[1][0] . ":\t" . $arValue[0] . "\n";
 	}
 	
 	$original_pack .= "\n\n";
@@ -45,11 +46,15 @@
 	} */
 
 	//$original_pack .= "Instr:\t" . BIN . $instr . "\t" . HEX . base_convert($instr, 2, 16) . "\n";
+	
 	#####################################################
 	
-	if (isset($_GET['gen']))
+	if (isset($_GET['generate']))
 	{
-		include 'forms/pack_parse_form.inc';
+		var_dump($_POST);
+		
+		//include 'forms/pack_parse_form.inc';
+		echo '<p><a href="index.php?generate" style="text-decoration: none"><input type="button" value="Back" /></a></p>';
 	}
 	elseif (isset($_GET['parse']))
 	{

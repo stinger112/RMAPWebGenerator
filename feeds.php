@@ -2,7 +2,7 @@
 	require_once 'parser.php';
 	error_reporting(0);
 	
-	if ($_POST['opt'] == "error") //Выдаем массив ошибок для выбора
+	if (isset($_GET['GiveMeErrorTypes']))
 	{
 		foreach (RMAP::$errTable as $arValue)
 		{
@@ -12,10 +12,22 @@
 			$i++;
 		}
 	}
-	elseif (substr_count($_POST['opt'], "err_type"))
+	
+	elseif (isset($_GET['GiveMeErrorPacket']))
 	{
-		
+		switch ($_GET['GiveMeErrorPacket'])
+		{
+			case '01':
+				break;
+			default:
+				break;
+		}
 	}
 	
-	
+	elseif (isset($_POST['GiveMeCRC'])) //Give throw POST, because Data perhaps very massive for GET question
+	{
+		$arData = explode(' ', $_POST['GiveMeCRC']);
+		$crc = RMAP::calculateCRC($arData);
+		echo $crc;
+	}
 ?>

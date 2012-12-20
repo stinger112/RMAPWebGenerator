@@ -145,20 +145,24 @@
 		
 		static $protocolID = '01';
 		
-		/* static $MapCodeTable = array(
-		'TargetLogicalAddress'		=>,
-		'ProtocolID'				=>,
-		'Instruction'				=>,
-		'Key'						=>,
-		'Status'					=>,
-		'ReplyAddress'				=>,
-		'Logical Adress'			=>,
-		'DataLength'				=>,
-		'HeaderCRC'					=>,
-		'Data'						=>,
-		'DataCRC'					=>
+		static $MapCodeTable = array(
+		'TargetLogicalAddress'		=> 0,
+		'ProtocolID'				=> 1,
+		'Instruction'				=> 2,
+		'Key'						=> 3,
+		'Status'					=> 4,
+		'ReplyAddress'				=> 5,
+		'LogicalAddress'			=> 6,
+		'TransactionIdentifier'		=> 7,
+		'Reserved'					=> 8,
+		'Address'					=> 9,
+		'DataLength'				=> 10,
+		'HeaderCRC'					=> 11,
+		'Data'						=> 12,
+		'Mask'						=> 13,
+		'DataCRC'					=> 14
 		); 
-		 */
+		
 		
 
 		/* Карта содержащит обязательные изначальные три байта. */
@@ -170,9 +174,9 @@
 
 		################################################Методы доступа################################################
 		
-		public function getMap(/* $Decompressed = FALSE */) //Возвращает карту пакета (в свернутом виде или побайтовом кодированном виде)
+		public function getMap($Decompressed = FALSE) //Возвращает карту пакета (в свернутом виде или побайтовом кодированном виде)
 		{
-			/* if ($Decompressed)
+			if ($Decompressed)
 			{
 				foreach ($this->packetMap as $arValue)
 				{
@@ -183,7 +187,7 @@
 				}
 				return $tmpMap;
 			}
-			else */
+			else
 				return $this->packetMap;
 		}
 		

@@ -7,7 +7,7 @@
 <body>
 	<div id="content">
 	<h1>Choose test:</h1>
-	<p><a href="?genext"><input type="button" value="Extended Packet Generator" /></a></p>
+	<p><a href="?generate"><input type="button" value="Extended Packet Generator" /></a></p>
 	<!-- <p><a href="?generr"><input type="button" value="Error Packet Generator" /></a></p> -->
 	<p><a href="?compare"><input type="button" value="Compare Packets" /></a></p>
 	<p><a href="?parse"><input type="button" value="Packet Analysator" /></a></p>
