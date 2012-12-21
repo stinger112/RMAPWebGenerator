@@ -173,8 +173,9 @@
 		'Status'					=> 4,
 		'ReplyAddress'				=> 5,
 		'LogicalAddress'			=> 6,
-		'TransactionIdentifier'		=> 7,
+		'TransactionID'				=> 7,
 		'Reserved'					=> 8,
+		'ExtendedAddress'			=> 9,
 		'Address'					=> 9,
 		'DataLength'				=> 10,
 		'HeaderCRC'					=> 11,
@@ -332,7 +333,7 @@
 			if ($posInPacket < count($arPacket)) //Check on "Too much data" error
 				$this->addError(6); 
 
-			return $this->getResult();
+			return $this;
 		}
 		
 		############################################Detail parse methods##############################################		
@@ -499,45 +500,4 @@
 				$this->addError(4); //Incorrect Data CRC
 		}
 	}
-	
-	//error_reporting(E_ALL);
-	//header('Content-Type: text/html; charset=utf-8');
-	
-	####################Правильные пакеты####################
-	//Пакеты команды
-	//$testPack = 'fe 01 6c 00 67 00 00 00 a0 00 00 00 00 00 10 9f 01 23 45 67 89 ab cd ef 10 11 12 13 14 15 16 17 56'; //Пакет записи с данными
-	//Пакеты ответа
-	//$testPack = 'fe 01 38 00 67 00 a0 74'; //Ответ на команду записи
-	###################НЕПРАВИЛЬНЫЕ пакеты###################
-	//Пакеты команды
-	//$testPack = 'fe 01 6c 00 67 00 00 00 a0 00 00 00 00 00 10 aa 01 23 45 67 89 ab cd ef 10 11 12 13 14 15 16 17 56'; //Пакет записи. Invalid Header CRC.
-	//$testPack = 'fe 01 6c 00 67 00 00 00 a0 00 00 00 00 00 10 9f 01 23 45 67 89 ab cd ef 10 11 12 13 14 15 16 17 bb'; //Пакет записи. Invalid Data CRC.
-	
-	//$testPack = 'fe 01 6c 00 67 00 00 00 a0 00 00 00 00 00 01 aa 01 bb'; //Пакет записи, с 1 байтом данных. Invalid Header and Data CRC
-	
-	//$testPack = 'fe 01 6c 00 67 00 00 00 a0 00 00 00 00 00 10 9f 01 23 45 67 89 ab cd ef 10 11 12 13 14 15 16 17 56 ff ff ff ff'; //Пакет записи с данными. Too much data
-	//$testPack = 'fe 01 6c 00 67 00 a0 00 00 00 00 00'; //Пакет записи. Early EOP
-	//$testPack = 'fe 01 80 00 67 00 a0 00 00 00 00 00'; //Пакет записи. Использован зарезервированный бит в блоке команды.
-	//$testPack = 'fe 01 44 00 67 00 a0 00 00 00 00 00'; //Пакет записи. Неправильное значение блока команды.
-	//Пакеты ответа
-	//$testPack = 'fe 01 38 00 67 00 a0'; //Ответ на команду записи. Early EOP
-	#########################################################
-	
-	/* $foo = Packet::Factory($testPack);
-	var_dump($foo->parse());
-	
-	$foo->showResult();
-	var_dump($foo->getMap('decoded')); */
-	
-	/* $first = '11 22 33 44 55 66 77 ff fg fe dr fg hg fd';
-	$second = '11 22 33 44 55 66 77 ff fg fe dr fg hg fd';
-	//$second =					  'ff DF fe dr fg hg fd';
-	//$second =					  'ff fg fe dr fg hg fd';
-	
-	$foo = Packet::Factory($first);
-	$bar = Packet::Factory($second);
-	
-	var_dump($foo->compare($bar)); */
-	
-	
 ?>

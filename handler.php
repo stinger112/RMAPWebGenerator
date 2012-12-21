@@ -4,64 +4,50 @@
 	header('Content-Type: text/html; charset=utf-8');
 	error_reporting(0);
 	
-	define(BIN, '0b');
-	define(OCT, '0o');
-	define(DEC, '0d');
-	define(HEX, '0x');
-	define(ASCII, "'");
-
+	//define(BIN, '0b');
+	//define(OCT, '0o');
+	//define(DEC, '0d');
+	//define(HEX, '0x');
 	##Формирование строки оригинального пакета из формы##
-	
-	/* foreach ($_POST as $key => $value)
-	{
-		if (substr_count($key, "options"))
-			$arOptions["$key"] = $value;
-		else
-		{
-			$arElementNameCat = explode(":", $key);
-			if ($arElementNameCat[2]== "instr")
-				$instr .= $value;
-			else 
-			{
-				$arPacket[$arElementNameCat[0]] = array($value, $arElementNameCat);
-			}
-			
-		}
-	} */
-	
-	/* $arPacket['02'] = $instr;
-	
-	ksort($arPacket, SORT_NUMERIC);
-	
-	foreach ($arPacket as $arValue)
-	{
-		$original_pack .= $arValue[1][0] . ":\t" . $arValue[0] . "\n";
-	}
-	
-	$original_pack .= "\n\n";
-	
-	foreach ($arPacket as $key => $value)
-	{
-		$original_pack .= $value . " ";
-	} */
-
-	//$original_pack .= "Instr:\t" . BIN . $instr . "\t" . HEX . base_convert($instr, 2, 16) . "\n";
-	
+		
 	#####################################################
 	
 	if (isset($_GET['generate']))
 	{
-		var_dump($_POST);
+		//var_dump($_POST);
+
+		foreach ($_POST as $key => $value)
+		{
+			if (preg_match('/^(\d+):.*/', $key, $number))
+			{
+				if (substr_count($key, 'Instruction'))
+					$instr .= $value;
+				else
+					$arDrawPacket[(int)$number[1]] = $value;
+			}
+		}
 		
-		//include 'forms/pack_parse_form.inc';
+		$arDrawPacket[3] = base_convert($instr, 2, 16);
+		ksort($arDrawPacket);
+		//var_dump($arDrawPacket);		
+		foreach ($arDrawPacket as $value)
+		{
+			$packetStr .= $value . " ";
+		}
+		$packetStr = rtrim($packetStr);
+		
+		echo "Packet: $packetStr";
+		
+		$packetObj = Packet::Factory(trim($packetStr))->parse();
+		$packetObj->showResult();
+		
 		echo '<p><a href="index.php?generate" style="text-decoration: none"><input type="button" value="Back" /></a></p>';
 	}
 	elseif (isset($_GET['parse']))
 	{
 		if ($_POST['packet'])
 		{
-			$packetObj = Packet::Factory(trim($_POST['packet']));
-			$packetObj->parse();
+			$packetObj = Packet::Factory(trim($_POST['packet']))->parse();
 			$packetObj->showResult();
 		}
 		else

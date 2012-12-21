@@ -17,7 +17,7 @@
 	{
 		switch ($_GET['GiveMeErrorPacket'])
 		{
-			case '01':
+			case 1:
 				break;
 			default:
 				break;
