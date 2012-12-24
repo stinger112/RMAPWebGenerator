@@ -3,36 +3,25 @@
 	
 	header('Content-Type: text/html; charset=utf-8');
 	error_reporting(E_ALL & ~E_NOTICE);
-	
-	//define(BIN, '0b');
-	//define(OCT, '0o');
-	//define(DEC, '0d');
-	//define(HEX, '0x');
-	##Формирование строки оригинального пакета из формы##
-		
-	#####################################################
-	
+
 	if (isset($_GET['generate']))
 	{
-		var_dump($_POST);
+		//var_dump($_POST);
+		ksort($_POST);
 		
 		foreach ($_POST as $key => $value)
 		{
-			if (preg_match('/^(\d+):.*/', $key, $number))
-				$arDrawPacket[(int)$number[1]] = $value;
-			
-			elseif (substr_count($key, 'Instruction'))
-				$instr .= $value;
-		
+			if ($value && preg_match('/^(\d+):.*/', $key))
+				if (substr_count($key, 'SpaceWireTargetAddress'))
+					$address = trim($value);
+				else
+					$arDrawPacket[] = $value;
 		}
-		
-		$arDrawPacket[3] = base_convert($instr, 2, 16);
-		ksort($arDrawPacket);
-		$packetStr = implode(' ', $arDrawPacket);
+		$packetStr = trim(implode(' ', $arDrawPacket));
 
-		$packetObj = Packet::Factory(trim($packetStr))->parse();
-		echo "Draw Packet: $packetStr<br>";
-		echo "Packet: " . $packetObj->getPacketString($_POST['base']);
+		$packetObj = Packet::Factory($packetStr)->parse();
+		
+		echo "<h3>Packet:</h3>" . "<font color='#FFC0CB'>$address</font> " . $packetObj->getPacketString($_POST['base']);
 		
 		$packetObj->showResult();
 		
