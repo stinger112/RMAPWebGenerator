@@ -169,7 +169,7 @@
 	
 	class RMAP extends Packet
 	{
-		function __construct($packStr)
+		protected function __construct($packStr)
 		{
 			parent::__construct($packStr);
 			$this->setResult("Protocol:\tRMAP");
