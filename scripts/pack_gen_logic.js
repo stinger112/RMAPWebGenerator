@@ -56,19 +56,24 @@ function main() {
 	/*----------------------Events binding---------------------*/
 	objErrorAllow.change(GiveErrorTypes);
 	
+	
 	objData.keyup(function() { GiveCRC(objData.val()); }).blur(function() {GiveCRC(objData.val());});
 	
-	/*objInstruction.change(function () {
+	objInstruction.change(function () {
 		
-		var instrStr = objInstruction.length;
-		for (var i = 0; i < objInstruction.length ; i++)
+		instrStr = objInstruction.length;
+		/*for (var i = 0; i < objInstruction.length ; i++)
 		{
 			var instrStr = objInstruction.index(i);
-		}
+		}*/
+		
+		objInstruction.each(function (index) {
+			//alert(index + ': ' + $(this).val());
+		});
 		
 		alert(instrStr);
 	});
-	*/
+	
 	
 	//$("select[name='options:error:type']").change(opt_err_type);
 	

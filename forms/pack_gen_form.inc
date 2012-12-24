@@ -7,20 +7,20 @@
 	<script type="text/javascript" src="/scripts/pack_gen_logic.js"></script>
 </head>
 <body>
+<form id="int_opt"></form>
 <form action="handler.php?generate" method="POST">
 
 	<div id="hidden" hidden="hidden">
 		<!------------------------Instructions------------------------>
-		<input type="hidden"	name="03:head:Instruction:reserved"	value="0">
-		<input type="hidden"	name="03:head:Instruction:command" 	value="1">
-		<input type="hidden"	name="03:head:Instruction:write"		value="0">
-		<input type="hidden"	name="03:head:Instruction:verify"		value="0">
-		<input type="hidden"	name="03:head:Instruction:reply"		value="0">
-		<input type="hidden"	name="03:head:Instruction:increment"	value="0">
-		
-		<input name="end_char" type="hidden" value="EOP">
+		<input type="hidden"	name="head:Instruction:reserved"	value="0">
+		<input type="hidden"	name="head:Instruction:command" 	value="1">
+		<input type="hidden"	name="head:Instruction:write"		value="0">
+		<input type="hidden"	name="head:Instruction:verify"		value="0">
+		<input type="hidden"	name="head:Instruction:reply"		value="0">
+		<input type="hidden"	name="head:Instruction:increment"	value="0">
 	</div>
 
+	
 	<div id=left>
 		<div id="address">
 		<h2>Address:</h2>
@@ -31,7 +31,7 @@
 		<div id="pack_body">
 		<h2>Data:</h2>
 		<p><textarea 	name="13:data" rows="10" placeholder="Insert data (in hex)"></textarea></p>
-		<p><input type="text"	name="14:data_crc"> Data CRC field (8 bit)
+		<p><input type="text"	name="14:data_crc" value="00"> Data CRC field (8 bit)
 		<!-- <p>
 		<input name="end_char" type="radio" value="EOP" checked disabled> EOP
 		<input name="end_char" type="radio" value="EEP" disabled> EEP -->
@@ -39,17 +39,17 @@
 		
 		<div id="options">
 		<h2>Options:</h2>
-		<input type="checkbox"	name="options:view"	checked> Detail result view<br>
-		<input type="checkbox"	name="options:error:allow">
-		<select name="options:error:type" size="1" disabled ></select> Allow error packet<br>
+		<!-- <input type="checkbox"	form="int_opt" name="options:view"	checked> Detail result view<br> -->
+		<input type="checkbox"	form="int_opt" name="options:error:allow">
+		<select name="options:error:type" form="int_opt"	size="1" disabled ></select> Allow error packet<br>
 		
 		<p>Byte Fomats:
-		<select name="options:base" size="1">
-		<option value="bin">Binary</option>
-		<option value="oct">Octal</option>
-		<option value="dec">Decymal</option>
-		<option value="hex" selected>Hexadecimal</option>
-		<option value="ascii">ASCII</option>
+		<select name="base" size="1">
+		<option value="2">Binary</option>
+		<option value="8">Octal</option>
+		<option value="10">Decymal</option>
+		<option value="16" selected>Hexadecimal</option>
+		<!-- <option value="ascii">ASCII</option> -->
 		</select>
 		</p>
 			<div id="buttons"><p>
@@ -60,30 +60,30 @@
 		</div>
 	</div>
 	
+	
 	<div id="header">
 		<h2>Header:</h2>
-		
 		<select name="02:head:ProtocolID" size="1">
 		<option value="01">Remote Memory Access Protocol</option>
-		<!-- <option value="0d02">CCSDS Packet Transfer Protocol</option>
-		<option value="0d238">GOES-R Reliable Data Delivery Protocol</option>
-		<option value="0d239">Serial Transfer Universal Protocol</option> -->
+		<option value="02">SpaceWire Common</option>
+		<!-- <option value="238">GOES-R Reliable Data Delivery Protocol</option>
+		<option value="239">Serial Transfer Universal Protocol</option> -->
 		</select>
 		
 		Protocol Identifier field (8 bit)
 
 		<p>Instruction field (8 bit include Reply Address Length field):</p>
-			<input type="checkbox"	name="03:head:Instruction:reserved"	value="1" disabled> Reserved<br>
-			<input type="checkbox"	name="03:head:Instruction:command"	value="1" checked disabled> Command<br>
-			<input type="checkbox"	name="03:head:Instruction:write"		value="1"> Write<br>
-			<input type="checkbox"	name="03:head:Instruction:verify"		value="1"> Verify data<br>
-			<input type="checkbox"	name="03:head:Instruction:reply"		value="1"> Reply<br>
-			<input type="checkbox"	name="03:head:Instruction:increment"	value="1"> Increment<br>
+			<input type="checkbox"	name="head:Instruction:reserved"	value="1" disabled> Reserved<br>
+			<input type="checkbox"	name="head:Instruction:command"		value="1" checked disabled> Command<br>
+			<input type="checkbox"	name="head:Instruction:write"		value="1"> Write<br>
+			<input type="checkbox"	name="head:Instruction:verify"		value="1"> Verify data<br>
+			<input type="checkbox"	name="head:Instruction:reply"		value="1"> Reply<br>
+			<input type="checkbox"	name="head:Instruction:increment"	value="1"> Increment<br>
 		<p>Reply Address Length:
-			<input name="03:head:Instruction:reply_addr_len" type="radio" value="00" checked> 0
-			<input name="03:head:Instruction:reply_addr_len" type="radio" value="01"> 4
-			<input name="03:head:Instruction:reply_addr_len" type="radio" value="10"> 8
-			<input name="03:head:Instruction:reply_addr_len" type="radio" value="11"> 12
+			<input name="head:Instruction:reply_addr_len" type="radio" value="00" checked> 0
+			<input name="head:Instruction:reply_addr_len" type="radio" value="01"> 4
+			<input name="head:Instruction:reply_addr_len" type="radio" value="10"> 8
+			<input name="head:Instruction:reply_addr_len" type="radio" value="11"> 12
 			Bytes</p>
 			
 		<p><input type="text" name="04:head:key"				value="00"				> Key field (1)

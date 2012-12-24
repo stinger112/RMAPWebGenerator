@@ -2,7 +2,7 @@
 	require_once 'parser.php';
 	
 	header('Content-Type: text/html; charset=utf-8');
-	error_reporting(0);
+	error_reporting(E_ALL & ~E_NOTICE);
 	
 	//define(BIN, '0b');
 	//define(OCT, '0o');
@@ -14,31 +14,26 @@
 	
 	if (isset($_GET['generate']))
 	{
-		//var_dump($_POST);
-
+		var_dump($_POST);
+		
 		foreach ($_POST as $key => $value)
 		{
 			if (preg_match('/^(\d+):.*/', $key, $number))
-			{
-				if (substr_count($key, 'Instruction'))
-					$instr .= $value;
-				else
-					$arDrawPacket[(int)$number[1]] = $value;
-			}
+				$arDrawPacket[(int)$number[1]] = $value;
+			
+			elseif (substr_count($key, 'Instruction'))
+				$instr .= $value;
+		
 		}
 		
 		$arDrawPacket[3] = base_convert($instr, 2, 16);
 		ksort($arDrawPacket);
-		//var_dump($arDrawPacket);		
-		foreach ($arDrawPacket as $value)
-		{
-			$packetStr .= $value . " ";
-		}
-		$packetStr = rtrim($packetStr);
-		
-		echo "Packet: $packetStr";
-		
+		$packetStr = implode(' ', $arDrawPacket);
+
 		$packetObj = Packet::Factory(trim($packetStr))->parse();
+		echo "Draw Packet: $packetStr<br>";
+		echo "Packet: " . $packetObj->getPacketString($_POST['base']);
+		
 		$packetObj->showResult();
 		
 		echo '<p><a href="index.php?generate" style="text-decoration: none"><input type="button" value="Back" /></a></p>';
