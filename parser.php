@@ -2,7 +2,7 @@
 
 	class Packet //!!Все внутренние массивы хранят hex-значения!!
 	{	
-		private $arPacket;		//This array contain original packet array
+		private $arPacket;		//This array contain original packet array in hex
 		private $arResult;		//This array contain parse results
 		private $arParseErrors;	//This array contain parse errors
 		
@@ -90,6 +90,36 @@
 		protected function addError($errString)
 		{
 			$this->arParseErrors[] = $errString;
+		}
+		
+		public function getPacketString($base)
+		{
+			switch ($base)
+			{
+				case 2:
+					$prefix = '0b';
+					break;
+				case 8:
+					$prefix .= '0o';
+					break;
+				case 10:
+					$prefix .= '0d';
+					break;
+				case 16:
+					$prefix .= '0x';
+					break;
+				default:
+					$base = 16;
+					break;
+			}
+			
+			foreach ($this->arPacket as $value)
+			{
+				$arTmp[] = $prefix . base_convert($value, 16, $base);
+			}
+			$formatedStr = implode(' ', $arTmp);
+			
+			return $formatedStr;
 		}
 		##################################################################################################################
 		public function compare(Packet $PacketForCompare) //Сравнивает массивы пакетов с конца 
