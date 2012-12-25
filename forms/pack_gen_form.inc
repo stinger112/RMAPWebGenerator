@@ -30,7 +30,7 @@
 			<h2>Options:</h2>
 			<!-- <input type="checkbox"	form="" name="options:view"	checked> Detail result view<br> -->
 			<input type="checkbox"	form="" name="options:error:allow">
-			<select name="options:error:type" form="internal"	size="1" disabled></select> Add error packet<br>
+			<select name="options:error:type" form="internal"	size="1" disabled></select> Add error packet
 			
 			<p>Byte Fomats:
 			<select name="base" size="1">
@@ -50,13 +50,12 @@
 	
 	<div id="right">
 		<div id="protocol">
-			<select form="" name="protocol" size="1">
-			<option value="01">Remote Memory Access Protocol</option>
-			<option value="02">SpaceWire Common</option>
-			<!-- <option value="238">GOES-R Reliable Data Delivery Protocol</option>
-			<option value="239">Serial Transfer Universal Protocol</option> -->
+			<!-- <select form="" name="protocol" size="1">
+			<option value="RMAP">Remote Memory Access Protocol</option>
+			<option value="common">SpaceWire Common</option>
 			</select>
-			Protocol Identifier field (8 bit)
+			Protocol Identifier field (8 bit) -->
+			<h1>RMAP GENERATOR</h1>
 		</div>
 		
 		<div id="header">

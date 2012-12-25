@@ -24,18 +24,11 @@
 		}
 	}
 	
-	elseif (isset($_POST['GiveMeCRC'])) //Give throw POST, because Data perhaps very massive for GET question
-	{
-		$arData = explode(' ', $_POST['GiveMeCRC']);
-		$crc = RMAP::calculateCRC($arData);
-		echo $crc;
-	}
-	
 	elseif (isset($_GET['GiveMeResult']))
 	{
 		//var_dump($_POST);
 		ksort($_POST);
-		
+	
 		foreach ($_POST as $key => $value)
 		{
 			if ($value && preg_match('/^(\d+):.*/', $key))
@@ -45,11 +38,24 @@
 				$arDrawPacket[] = $value;
 		}
 		$packetStr = trim(implode(' ', $arDrawPacket));
-		
+	
 		$packetObj = Packet::Factory($packetStr)->parse();
-		
+	
 		echo "<h3>Packet:</h3>" . "<font color='#FFC0CB'>$address</font> " . $packetObj->getPacketString($_POST['base']);
-		
+	
 		$packetObj->showResult();
+	}
+	
+	elseif ($_GET['GiveMePacketString'])
+	{
+		$packetStr = trim($_POST['packet']);
+		echo Packet::Factory($packetStr)->getPacketString($_POST['base']);
+	}
+	##################################################Exchange throw POST for massive question##################################################
+	elseif ($_POST['GiveMeCRC'])
+	{
+		$arData = explode(' ', $_POST['GiveMeCRC']);
+		$crc = RMAP::calculateCRC($arData);
+		echo $crc;
 	}
 ?>

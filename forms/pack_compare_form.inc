@@ -11,9 +11,9 @@
 <body>
 	<div id="form">
 	<form action="handler.php?compare" method="POST">
-	<textarea name="original_pack" cols="40" rows="30" placeholder="Insert original packet"></textarea>
+	<textarea name="original_pack" cols="40" rows="30" placeholder="Insert original packet"><?php if ($original_pack) echo $original_pack?></textarea>
 	<textarea name="received_pack" cols="40" rows="30" placeholder="Insert received packet"></textarea>
-	<p><input type="submit" value="Сравнить"><a href="?gen" style="text-decoration: none"><input type="button" value="Back" /></a></p>
+	<p><input type="submit" value="Сравнить"><input type="button" VALUE="Back" onClick="history.go(-1);"></p>
 	</form>
 	</div>
 </body>

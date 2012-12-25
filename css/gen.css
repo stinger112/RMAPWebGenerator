@@ -6,6 +6,9 @@ textarea {
 input[type="text"] {
 	width: 300px;
 }
+input[type="number"] {
+	width: 100px;
+}
 #left {
 	display: inline-block;
 	width: 45%;
@@ -37,6 +40,7 @@ input[type="text"] {
 	width: 92%;
 	background: #CCCCCC;
 	padding: 10px;
+	text-align: center;
 	border: 4px inset black;
 	border-radius: 6px;
 	-moz-border-radius: 6px;
