@@ -21,7 +21,7 @@
 
 		$packetObj = Packet::Factory($packetStr)->parse();
 		
-		echo "<h3>Packet:</h3>" . "<font color='#FFC0CB'>$address</font> " . $packetObj->getPacketString($_POST['base']);
+		//echo "<h3>Packet:</h3>" . "<font color='#FFC0CB'>$address</font> " . $packetObj->getPacketString($_POST['base']);
 		
 		$packetObj->showResult();
 		

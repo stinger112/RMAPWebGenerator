@@ -30,27 +30,37 @@ function main() {
 	objData = $("textarea[name*='data']");
 	objDataCRC = $("input[name*='crc:DataCRC']");
 	
+	
 	//Support Fields (options and buttoms)
 	objErrorAllow = $("input[name*='error:allow']");
 	objErrorType = $("select[name='options:error:type']");
 	
 	/*---------------------------------------------------------*/
+	function GiveMeCRC(string, targetObj) {
+		$.post('feeds.php', {GiveMeCRC: string}, function(data) {
+			targetObj.val(data);
+		});
+	}
 	
-	
+	function GiveMeResult() { //Получаем результат и добавляем его в нижнее окошечко
+			$("#form").ajaxSubmit({
+				target: "#result",
+				url: "feeds.php?GiveMeResult"
+			});	
+	}
 	
 	/*----------------------Events binding---------------------*/
-	objErrorAllow.change(function () { //Оработчик блока добавления пакета	
-	    if ($("input[name='options:error:allow']:checked").size())
-	    {
-	    	objErrorType.load('feeds.php?GiveMeErrorTypes');
-	    	objErrorType.removeAttr("disabled");
-	    }
-	    else
-	    {
-	    	objErrorType.empty();
-	    	objErrorType.attr("disabled", "disabled");
-	    }
+	objErrorAllow.toggle(function () { //Оработчик блока добавления пакета
+	    objErrorType.load('feeds.php?GiveMeErrorTypes');
+	    objErrorType.removeAttr("disabled");
+	}, function () {
+		objErrorType.empty();
+    	objErrorType.attr("disabled", "disabled");
 	});
+	
+	$("#form").on('mousemove', function () {
+		GiveMeResult();
+	})
 	
 	objHeader.on('keyup blur change',function () { //Нерационально обрабатывать блок инструкции каждый раз, ведь значение блока меняется не для всех
 		
@@ -82,19 +92,13 @@ function main() {
 				headerStr += $.trim($(this).val()) + " "; //Удаляем случайно попавшие пробелы
 		});
 		headerStr = $.trim(headerStr);
-		
-		$.post('feeds.php', {GiveMeCRC: headerStr}, function(data) {
-			objHeaderCRC.val(data);
-		});
+		GiveMeCRC(headerStr, objHeaderCRC);
 		/*----------------------------------------------------------------*/
 	});
 	
 	objData.on('keyup mousemove', function() { //Giving Data CRC
-		var dataStr = $.trim(objData.val());
-		
-		$.post('feeds.php', {GiveMeCRC: dataStr}, function(data) {
-			objDataCRC.val(data);
-		});
+		var dataStr = $.trim(objData.val());		
+		GiveMeCRC(dataStr, objDataCRC);
 	});
 
 	/*---------------------------------------------------------*/
