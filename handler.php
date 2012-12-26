@@ -2,11 +2,10 @@
 	require_once 'parser.php';
 	
 	header('Content-Type: text/html; charset=utf-8');
-	error_reporting(E_ALL & ~E_NOTICE);
+	error_reporting(0);
 
 	if (isset($_GET['generate']))
 	{
-		var_dump($_POST);
 		ksort($_POST);
 		
 		foreach ($_POST as $key => $value)

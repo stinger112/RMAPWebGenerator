@@ -96,10 +96,15 @@ function main() {
 	$(".head").on('keyup blur change', CalculateHeaderCRC);
 	
 	
-	/*Обработчик изменения блока данных, заполняющий DataCRC*/
-	$(".data").on('keyup blur', function() { //Giving Data CRC
+	/*Обработчик изменения блока данных, заполняющий DataCRC и DataLength*/
+	$(".data").on('keyup blur', function() { 	
 		var dataStr = $.trim($(".data").val());		
-		GiveMeCRC(dataStr, $("input[name*='DataCRC']"));
+		GiveMeCRC(dataStr, $("input[name*='DataCRC']")); //Giving Data CRC
+		
+		//Calclulate DataLength
+		var dataLen = dataStr.split(' ').length; 		
+		var tmp = sprintf("%06x", dataLen);
+		$("input[name*='DataLength']").val(tmp[0]+tmp[1]+" "+tmp[2]+tmp[3]+" "+tmp[4]+tmp[5]);
 	});
 }
 
