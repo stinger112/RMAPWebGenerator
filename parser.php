@@ -368,7 +368,12 @@
 			###################################################################################################################################################
 			
 			if ($posInPacket < count($arPacket)) //Check on "Too much data" error
-				$this->addError(6); 
+			{
+				$this->addError(6);
+				$len = count($arPacket) - $posInPacket;
+				$tmpMap[] = array('type' => 'ExcessBytes', 'length' => $len); //Excess Bytes
+				$this->updateMap($tmpMap);
+			}
 
 			return $this;
 		}
