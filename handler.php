@@ -6,7 +6,7 @@
 
 	if (isset($_GET['generate']))
 	{
-		//var_dump($_POST);
+		var_dump($_POST);
 		ksort($_POST);
 		
 		foreach ($_POST as $key => $value)
@@ -20,6 +20,7 @@
 		$included_pack = trim(implode(' ', $arDrawPacket));
 		include 'forms/pack_parse_form.inc';
 	}
+	
 	elseif (isset($_GET['parse']))
 	{
 		if ($_POST['packet'])
@@ -30,6 +31,7 @@
 		else
 			echo "<h2>Wrong Packet Input</h2>";	
 	}
+	
 	elseif (isset($_GET['compare']))
 	{
 		if ($_POST['original_pack'] && $_POST['received_pack'])
@@ -55,6 +57,7 @@
 		else
 			echo "<h2>Wrong Packets Input</h2>";
 	}
+	
 	else
 	{
 		header('Location: index.php');

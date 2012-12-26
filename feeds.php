@@ -2,54 +2,59 @@
 	require_once 'parser.php';
 	error_reporting(0);
 	
-	if (isset($_GET['GiveMeErrorTypes']))
+	if (isset($_GET['GiveMeResult']))
 	{
-		foreach (RMAP::$errTable as $arValue)
-		{
-			if ((0 != $i) && (8 != $i))
-				echo '<option value="'. $i .'">' . $arValue['error'] . "</option>\n";
-			
-			$i++;
-		}
-	}
-	
-	elseif (isset($_GET['GiveMeErrorPacket']))
-	{
-		switch ($_GET['GiveMeErrorPacket'])
-		{
-			case 1:
-				break;
-			default:
-				break;
-		}
-	}
-	
-	elseif (isset($_GET['GiveMeResult']))
-	{
-		//var_dump($_POST);
 		ksort($_POST);
-	
 		foreach ($_POST as $key => $value)
 		{
 			if ($value && preg_match('/^(\d+):.*/', $key))
+			{
 				if (substr_count($key, 'SpaceWireTargetAddress'))
-				$address = trim($value);
-			else
+					$addrLen = count(explode(' ', trim($value)));
+				
 				$arDrawPacket[] = $value;
+			}	
 		}
 		$packetStr = trim(implode(' ', $arDrawPacket));
-	
-		$packetObj = Packet::Factory($packetStr)->parse();
-	
-		echo "<h3>Packet:</h3>" . "<font color='#FFC0CB'>$address</font> " . $packetObj->getPacketString($_POST['base']);
-	
-		$packetObj->showResult();
+		$packetObj = Packet::Factory($packetStr, $addrLen);
+		
+		echo "<h3>Packet:</h3>" . "<font color='#FFC0CB'></font> " . $packetObj->getPacketString($_POST['base']);
+				
+		if ($_POST['view'])
+		{
+			$packetObj->parse();
+			$packetObj->showResult();
+		}
 	}
 	
-	elseif ($_GET['GiveMePacketString'])
+	elseif (isset($_GET['GiveMeJSONMap']))
 	{
-		$packetStr = trim($_POST['packet']);
-		echo Packet::Factory($packetStr)->getPacketString($_POST['base']);
+		$arPacketsSample = array (
+				//Пакеты команды
+				0 => 'fe 01 6c 00 67 00 00 00 a0 00 00 00 00 00 10 9f 01 23 45 67 89 ab cd ef 10 11 12 13 14 15 16 17 56', //Command executed successfully
+				4 => 'fe 01 6c 00 67 00 00 00 a0 00 00 00 00 00 10 9f 01 23 45 67 89 ab cd ef 10 11 12 13 14 15 16 17 bb', //Invalid Data CRC
+				5 => 'fe 01 6c 00 67 00 00 00 a0 00 00 00 00 00 10 9f', //Early EOP
+				6 => 'fe 01 6c 00 67 00 00 00 a0 00 00 00 00 00 10 9f 01 23 45 67 89 ab cd ef 10 11 12 13 14 15 16 17 56 ff ff ff ff ff ff ff', //Too much data
+		);
+				
+		$packetStr = $arPacketsSample[$_GET['GiveMeJSONMap']];
+		
+		if ($packetStr)
+		{
+			$packetObj = Packet::Factory($packetStr)->parse();
+			$Map = $packetObj->getMap('decoded');
+			
+			if ($Map['ExcessBytes']) //Делаем редактирование карты для случая Too much data (Пристыковываем ExcessBytes к последнему полю карты)
+			{
+				end($Map);
+				prev($Map);		
+				$key = key($Map); //Пришлось сделать так, через current($Map) нет доступа к значению элемента 
+				$Map[$key] .= " ". $Map['ExcessBytes'];
+				unset($Map['ExcessBytes']);
+			}
+			
+			echo json_encode($Map);
+		}
 	}
 	##################################################Exchange throw POST for massive question##################################################
 	elseif ($_POST['GiveMeCRC'])

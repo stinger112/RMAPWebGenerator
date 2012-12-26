@@ -5,6 +5,7 @@
 <link type="text/css" rel="stylesheet" href="/css/gen.css">
 	<script type="text/javascript" src="/scripts/jquery-1.8.3.js"></script>
 	<script type="text/javascript" src="/scripts/jquery.form.js"></script>
+	<script type="text/javascript" src="/scripts/javascript-sprintf.js"></script>
 	<script type="text/javascript" src="/scripts/pack_gen_logic.js"></script>
 </head>
 <body>
@@ -12,25 +13,25 @@
 	<div id="left">
 		<div id="address">
 			<h2>Address:</h2>
-			<p><input type="text" name="00:address:SpaceWireTargetAddress"> SpaceWire Address</p>
-			<p><input type="text" name="01:head:TargetLogicalAddress" value="fe" required> SpaceWire Logical Address<p>
+			<p><input type="text"	class="field address"	name="00:SpaceWireTargetAddress"> SpaceWire Address</p>		
 		</div>
 		
 		<div id="pack_body">
 			<h2>Data:</h2>
-			<p><textarea 			name="13:data" rows="10" placeholder="Insert data (in hex)">01 23 45 67 89 ab cd ef 10 11 12 13 14 15 16 17</textarea></p>
-			<p><input type="text"	name="14:crc:DataCRC" value="56"> Data CRC field (8 bit)
-			<!-- <p>
-			<input name="end_char" type="radio" value="EOP" checked disabled> EOP
-			<input name="end_char" type="radio" value="EEP" disabled> EEP -->
-			</p>
+			<p><textarea 			class="field data"	name="13:Data" rows="10" placeholder="Insert data (in hex)"></textarea></p>
+			<p><input type="text"	class="field"		name="14:DataCRC"> Data CRC field (8 bit)
 		</div>
 		
 		<div id="options">
 			<h2>Options:</h2>
-			<!-- <input type="checkbox"	form="" name="options:view"	checked> Detail result view<br> -->
-			<input type="checkbox"	form="" name="options:error:allow">
-			<select name="options:error:type" form="internal"	size="1" disabled></select> Add error packet
+			<input type="checkbox"			name="view"		value="detail"	checked> Detail result view<br>
+			<select	form=""	name="template_type"	size="1">
+			<option value="0">Command executed successfully</option>
+			<option value="2">Unused RMAP Packet Type or Command Code</option>
+			<option value="4">Invalid Data CRC</option>
+			<option value="5">Early EOP</option>
+			<option value="6">Too much data</option>
+			</select> Add template packet
 			
 			<p>Byte Fomats:
 			<select name="base" size="1">
@@ -38,7 +39,6 @@
 			<option value="8">Octal</option>
 			<option value="10">Decymal</option>
 			<option value="16" selected>Hexadecimal</option>
-			<!-- <option value="ascii">ASCII</option> -->
 			</select>
 			</p>
 				<div id="buttons"><p>
@@ -49,41 +49,35 @@
 	</div>
 	
 	<div id="right">
-		<div id="protocol">
-			<!-- <select form="" name="protocol" size="1">
-			<option value="RMAP">Remote Memory Access Protocol</option>
-			<option value="common">SpaceWire Common</option>
-			</select>
-			Protocol Identifier field (8 bit) -->
-			<h1>RMAP GENERATOR</h1>
-		</div>
+		<div id="protocol"><h1>RMAP GENERATOR</h1></div>
 		
 		<div id="header">
-				<input type="hidden"	name="02:head:ProtocolID" 	value="01">
+			<p><input type="text"	class="field head"	name="01:TargetLogicalAddress"	required> SpaceWire Logical Address<p>
+			   <input type="hidden"	class="field head"	name="02:ProtocolID"	>
+			   <input type="hidden"	class="field head"	name="03:Instruction"	>
 			<h2>Header:</h2>
 			<p>Instruction field (8 bit include Reply Address Length field):</p>
-				<input type="hidden"	name="03:head:Instruction" 	value="6c">
-				<input type="checkbox"	form="" name="head:Instruction:reserved"	value="1"> Reserved<br>
-				<input type="checkbox"	form="" name="head:Instruction:command"		value="1" checked> Command<br>
-				<input type="checkbox"	form="" name="head:Instruction:write"		value="1" checked> Write<br>
-				<input type="checkbox"	form="" name="head:Instruction:verify"		value="1"> Verify data<br>
-				<input type="checkbox"	form="" name="head:Instruction:reply"		value="1" checked> Reply<br>
-				<input type="checkbox"	form="" name="head:Instruction:increment"	value="1" checked> Increment<br>
+				<input type="checkbox"	class="Instruction"	form="" name="reserved"		value="1"> Reserved<br>
+				<input type="checkbox"	class="Instruction"	form="" name="command"		value="1"> Command<br>
+				<input type="checkbox"	class="Instruction"	form="" name="write"		value="1"> Write<br>
+				<input type="checkbox"	class="Instruction"	form="" name="verify"		value="1"> Verify data<br>
+				<input type="checkbox"	class="Instruction"	form="" name="reply"		value="1"> Reply<br>
+				<input type="checkbox"	class="Instruction"	form="" name="increment"	value="1"> Increment<br>
 			<p>Reply Address Length:
-				<input type="radio"		form=""	name="head:Instruction:reply_addr_len"	value="00" checked> 0
-				<input type="radio"		form=""	name="head:Instruction:reply_addr_len"	value="01"> 4
-				<input type="radio"		form=""	name="head:Instruction:reply_addr_len" 	value="10"> 8
-				<input type="radio"		form=""	name="head:Instruction:reply_addr_len"	value="11"> 12
+				<input type="radio"		class="Instruction"	form=""	name="reply_addr_len"	value="00"	checked> 0
+				<input type="radio"		class="Instruction"	form=""	name="reply_addr_len"	value="01"> 4
+				<input type="radio"		class="Instruction"	form=""	name="reply_addr_len"	value="10"> 8
+				<input type="radio"		class="Instruction"	form=""	name="reply_addr_len"	value="11"> 12
 				Bytes</p>
 				
-			<p><input type="text" name="04:head:Key"				value="00"				> Key field (1)
-			<p><input type="text" name="05:head:ReplyAddress"								> Reply Address field (1)	
-			<p><input type="text" name="06:head:LogicalAddress"		value="67"				> Initiator Logical Address field (1)
-			<p><input type="text" name="07:head:TransactionID"		value="00 00"			> Transaction Identifier field  (2)
-			<p><input type="text" name="09:head:ExtendedAddress"	value="00"				> Extended Address field (1)
-			<p><input type="text" name="10:head:Address"			value="a0 00 00 00"		> Address field (4)
-			<p><input type="text" name="11:head:DataLength"			value="00 00 10"		> Data Length field (3)
-			<p><input type="text" name="12:crc:HeaderCRC"			value="9f"				> Header CRC field (1)
+			<p><input type="text"	class="field head"	name="04:Key"				> Key field (1)
+			<p><input type="text"	class="field head"	name="05:ReplyAddress"		> Reply Address field (1)	
+			<p><input type="text"	class="field head"	name="06:LogicalAddress"	> Initiator Logical Address field (1)
+			<p><input type="text"	class="field head"	name="07:TransactionID"		> Transaction Identifier field  (2)
+			<p><input type="text"	class="field head"	name="09:ExtendedAddress"	> Extended Address field (1)
+			<p><input type="text"	class="field head"	name="10:Address"			> Address field (4)
+			<p><input type="text"	class="field head"	name="11:DataLength"		> Data Length field (3)
+			<p><input type="text"	class="field"		name="12:HeaderCRC"			> Header CRC field (1)
 		</div>
 	</div>
 	
