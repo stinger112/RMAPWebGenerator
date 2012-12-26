@@ -2,30 +2,42 @@
 
 	class Packet //!!Все внутренние массивы хранят hex-значения!!
 	{	
-		private $arPacket;		//This array contain original packet array in hex
+		private $arAddress;		//This array contain packet address (in hex)
+		private $arPacket;		//This array contain original packet array (in hex)
 		private $arResult;		//This array contain parse results
 		private $arParseErrors;	//This array contain parse errors
 		
-		protected function __construct($packStr)
+		protected function __construct($arPacket, $arAddress = NULL)
 		{
-			$arPack = explode(" ", $packStr);
-			$this->PacketArray($arPack);
+			$this->arPacket = $arPacket;
 			
-			$this->setResult("Packet length:\t" . count($this->PacketArray()));
+			if (isset($arAddress[0]))
+				$this->arAddress = $arAddress;
+			
+			$this->setResult("Packet length:\t" . (count($this->arPacket) + count($this->arAddress)));
 		}
 		
-		static public function Factory($packStr, $addrLenInBytes = 0) //Метод-фабрика (Производит дифференциацию пакетов по типам)
+		static public function Factory($packStr, $addressLength = 0) //Метод-фабрика (Производит дифференциацию пакетов по типам)
 		{
 			if ($packStr && is_string($packStr))
 			{	
-				$arPacket = explode(' ', $packStr);
+				$arTmp = explode(' ', $packStr);
+				
+				if ($addressLength)
+				{
+					$arAddress = array_slice($arTmp, 0 ,$addressLength);
+					$arPacket = array_slice($arTmp, $addressLength);
+				}
+				else
+					$arPacket = $arTmp;
+				
 				switch ($arPacket[1])
 				{
 					case RMAP::$protocolID:
-						$packet = new RMAP($packStr);
+						$packet = new RMAP($arPacket, $arAddress);
 						break;
 					default:
-						$packet = new Packet($packStr);
+						$packet = new Packet($arPacket, $arAddress);
 						break;
 				}
 				
@@ -113,6 +125,11 @@
 					break;
 			}
 			
+			foreach ($this->arAddress as $value)
+			{
+				$arTmp[] = $prefix . base_convert($value, 16, $base);
+			}
+			
 			foreach ($this->arPacket as $value)
 			{
 				$arTmp[] = $prefix . base_convert($value, 16, $base);
@@ -163,15 +180,16 @@
 		{
 			$this->setResult("Protocol:\tUndefined");
 			$this->setResult("Packet don't parsed, because I don't know logic", 'error');
+			return $this;
 		}
 		
 	}
 	
 	class RMAP extends Packet
 	{
-		protected function __construct($packStr)
+		protected function __construct($arPacket, $arAddress = NULL)
 		{
-			parent::__construct($packStr);
+			parent::__construct($arPacket, $arAddress);
 			$this->setResult("Protocol:\tRMAP");
 		}
 		
@@ -257,20 +275,9 @@
 			return $crc;
 		}
 		
-		public function getMap($mode = NULL) //Возвращает карту пакета (в свернутом виде, развернутом побайтовом кодированном или расшифрованном виде)
+		public function getMap($mode = NULL) //Return packet map (in compact or decoded view)
 		{
-			/* if ('decompressed' === $mode)
-			{
-				foreach ($this->packetMap as $arValue)
-				{
-					for ($i=0 ;$i < $arValue['length']; $i++)
-					{
-						$tmpMap[] = RMAP::$MapCodeTable[$arValue['type']];
-					}
-				}
-				return $tmpMap;
-			}
-			else*/if ('decoded' === $mode)
+			if ('decoded' === $mode)
 			{
 				$arPacket = $this->PacketArray();
 				$pointer = 0;
