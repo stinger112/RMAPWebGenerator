@@ -419,7 +419,10 @@
 				/* Парсим только в случае, если командный пакет потому что для пакета ответа это бессмысленно (целостность и так проверяется по CRC,
 				а сам блок представляет из себя копию аналогичного отправленного пакета команды) */
 				if ($command == '0111') //Уникальный случай: команда Read-Modify-Write (ещё не включена опция обработки подобных пакетов)
+				{
 					$this->setResult("Packet type:\tRead-Modify-Write");
+					$this->addError("Unfortunately this algorithm did't have complete support RMW Packets (therefore probable unexpected parse errors)");
+				}
 				else
 				{
 					$instrBin[2] == 0 ? $this->setResult("Read", 'command')			: $this->setResult("Write", 'command');
