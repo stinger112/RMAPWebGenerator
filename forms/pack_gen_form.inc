@@ -13,7 +13,11 @@
 	<div id="left">
 		<div id="address">
 			<h2>Address:</h2>
-			<p><input type="text"	class="field address"	name="00:SpaceWireTargetAddress"> SpaceWire Address</p>		
+			<!-- -------------------Common Field------------------- -->
+			<p><input type="text"	name="ADDRESS"> SpaceWire Address</p>	
+			   <input type="hidden" name="HEADER"	>
+			   <input type="hidden" name="DATA"	>
+			<!-- -------------------------------------------------- -->
 		</div>
 		
 		<div id="pack_body">
@@ -52,8 +56,8 @@
 		<div id="protocol"><h1>RMAP GENERATOR</h1></div>
 		
 		<div id="header">
-			<p><input type="text"	class="field head"	name="01:TargetLogicalAddress"	required> SpaceWire Logical Address<p>
-			   <input type="hidden"	class="field head"	name="02:ProtocolID"	>
+			<p><input type="text"	class="field head"	name="01:TargetLogicalAddress"	value="fe" required> SpaceWire Logical Address<p>
+			   <input type="hidden"	class="field head"	name="02:ProtocolID"	value="01">
 			   <input type="hidden"	class="field head"	name="03:Instruction"	>
 			<h2>Header:</h2>
 			<p>Instruction field (8 bit include Reply Address Length field):</p>

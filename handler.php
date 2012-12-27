@@ -6,17 +6,16 @@
 
 	if (isset($_GET['generate']))
 	{
-		ksort($_POST);
+		if ($_POST['ADDRESS'])
+			$packetStr .= $_POST['ADDRESS'] . " ";
 		
-		foreach ($_POST as $key => $value)
-		{
-			if ($value && preg_match('/^(\d+):.*/', $key))
-				if (substr_count($key, 'SpaceWireTargetAddress'))
-					$address = trim($value);
-				else
-					$arDrawPacket[] = $value;
-		}
-		$included_pack = trim(implode(' ', $arDrawPacket));
+		if ($_POST['HEADER'])
+			$packetStr .= $_POST['HEADER'] . " ";
+		
+		if ($_POST['DATA'])
+			$packetStr .= $_POST['DATA'];
+		
+		$included_pack = trim($packetStr);
 		include 'forms/pack_parse_form.inc';
 	}
 	

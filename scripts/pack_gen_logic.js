@@ -7,13 +7,21 @@ function base_convert(value, base_from, base_to) { //http://vanchester.ru/conver
 }
 
 /*------------------------Define functions-------------------------*/
-function GiveMeCRC(string, targetObj) {
-	$.post('feeds.php', {GiveMeCRC: string}, function(data) {
-		targetObj.val(data);
-	});
+function GiveMeCRC(string) {
+	var crc = "";
+
+	crc = $.ajax({
+		  url: 'feeds.php',
+		  type: 'POST',
+		  data: {GiveMeCRC: string},
+		  async: false
+	}).responseText;
+	
+	return crc;
 }
 
-function CalculateHeaderCRC() { //Подсчет Header CRC
+function CalculateHeader () //Calculate Header
+{
 	var headerStr = ""; 
 	
 	$(".head").each(function () {
@@ -21,7 +29,22 @@ function CalculateHeaderCRC() { //Подсчет Header CRC
 			headerStr += $.trim($(this).val()) + " "; //Удаляем случайно попавшие пробелы
 	});
 	headerStr = $.trim(headerStr);
-	GiveMeCRC(headerStr, $("input[name*='HeaderCRC']"));
+	
+	return headerStr;
+}
+
+function CalculateCommonFields ()
+{
+	var addressStr = $.trim($("input[name='ADDRESS']").val());
+	$("input[name='ADDRESS']").val(addressStr); 
+	
+	//Save Header
+	var headerStr = CalculateHeader()+ " " + $.trim($("input[name*='HeaderCRC']").val());
+	$("[name='HEADER']:hidden").val($.trim(headerStr)); 
+	
+	//Save Data
+	var dataStr = $.trim($(".field[name='13:Data']").val()) + " " + $.trim($("input[name*='DataCRC']").val());
+	$("[name='DATA']").val($.trim(dataStr)); 
 }
 /*-----------------------------------------------------------------*/
 
@@ -55,7 +78,6 @@ function main() {
 								$(this).removeAttr("checked");
 						});
 						
-						//$(".Instruction").filter(":checked").removeAttr("checked"); //Удаляем в reply_addr_len старую галочку
 						$(".Instruction").filter("[value='"+instr[6]+instr[7]+"']").attr("checked", "checked");
 					}
 				});	
@@ -65,7 +87,9 @@ function main() {
 	
 	
 	/*Обрабатываем изменение формы. Получаем результат и добавляем его в footer*/
-	$("#result").on('mouseenter', function () { 
+	$("#result").on('mouseenter', function () {
+		CalculateCommonFields();
+		
 		$("#form").ajaxSubmit({
 			target: "#result",
 			url: "feeds.php?GiveMeResult"
@@ -90,16 +114,21 @@ function main() {
 		instrStr = base_convert(instrStr, 2, 16);
 		$("input[name*='Instruction']").val(instrStr);
 		
-		CalculateHeaderCRC();
+		var crc = GiveMeCRC(CalculateHeader()); //Calculate and save Header CRC
+		$("input[name*='HeaderCRC']").val(crc);
 	});
 	
-	$(".head").on('keyup blur change', CalculateHeaderCRC);
+	$(".head").on('keyup blur change', function () {
+		var crc = GiveMeCRC(CalculateHeader()); //Calculate and save Header CRC
+		$("input[name*='HeaderCRC']").val(crc);
+	});
 	
 	
 	/*Обработчик изменения блока данных, заполняющий DataCRC и DataLength*/
-	$(".data").on('keyup blur', function() { 	
-		var dataStr = $.trim($(".data").val());		
-		GiveMeCRC(dataStr, $("input[name*='DataCRC']")); //Giving Data CRC
+	$("[name='Data']").on('keyup blur', function() { 	
+		var dataStr = $.trim($(".data").val());
+		
+		$("input[name*='DataCRC']").val(GiveMeCRC(dataStr)); //Giving Data CRC
 		
 		//Calclulate DataLength
 		var dataLen = dataStr.split(' ').length; 		
