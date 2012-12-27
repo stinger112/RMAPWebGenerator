@@ -57,7 +57,14 @@
 							'fe 01 6e 00 00 99 aa bb cc dd ee 00 67 00 02 00 a0 00 00 10 00 00 10 7f a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 aa ab ac ad ae af b4',
 							'fe 01 4d 00 99 aa bb cc 67 00 03 00 a0 00 00 10 00 00 10 f7'
 						),
-				2 => arry(	),			
+				//Unused RMAP Packet Type or Command Code
+				2 => array(	'fe 01 40',
+							'fe 01 44',
+							'fe 01 50',
+							'fe 01 54',
+							'fe 01 58',
+							'fe 01 28'
+						),			
 				4 => array(	'fe 01 6c 00 67 00 00 00 a0 00 00 00 00 00 10 9f 01 23 45 67 89 ab cd ef 10 11 12 13 14 15 16 17 bb'), //Invalid Data CRC
 				5 => array(	'fe 01 6c 00 67 00 00 00 a0 00 00 00 00 00 10 9f'), //Early EOP
 				6 => array(	'fe 01 6c 00 67 00 00 00 a0 00 00 00 00 00 10 9f 01 23 45 67 89 ab cd ef 10 11 12 13 14 15 16 17 56 ff ff ff ff ff ff ff'), //Too much data

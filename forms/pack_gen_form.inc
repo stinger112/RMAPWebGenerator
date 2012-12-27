@@ -62,7 +62,7 @@
 			<h2>Header:</h2>
 			<p>Instruction field (8 bit include Reply Address Length field):</p>
 				<input type="checkbox"	class="Instruction"	form="" name="reserved"		value="1"> Reserved<br>
-				<input type="checkbox"	class="Instruction"	form="" name="command"		value="1"> Command<br>
+				<input type="checkbox"	class="Instruction"	form="" name="command"		value="1" checked disabled> Command<br>
 				<input type="checkbox"	class="Instruction"	form="" name="write"		value="1"> Write<br>
 				<input type="checkbox"	class="Instruction"	form="" name="verify"		value="1"> Verify data<br>
 				<input type="checkbox"	class="Instruction"	form="" name="reply"		value="1"> Reply<br>
