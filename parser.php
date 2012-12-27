@@ -47,6 +47,41 @@
 				throw new RuntimeException("Packet didn't created (wrong string received)");
 		}
 		
+		static public function PacketFormatter($packet, $base) //Packet formatter from hex (without prefix) to bin\oct\dec\hex (with prefix)
+		{
+			switch ($base)
+			{
+				case 2:
+					$prefix = '0b';
+					break;
+				case 8:
+					$prefix .= '0o';
+					break;
+				case 10:
+					$prefix .= '0d';
+					break;
+				case 16:
+					$prefix .= '0x';
+					break;
+				default:
+					$base = 16;
+					break;
+			}
+			
+			if (is_string($packet))
+			{
+				$packet = explode(" ", trim($packet));
+			}
+			
+			foreach ($packet as $value)
+			{
+				$arTmp[] = $prefix . base_convert($value, 16, $base);
+			}
+			
+			$formatted = implode(' ', $arTmp);
+			
+			return $formatted;
+		}
 		##################################################Access Methods##################################################
 		protected function setResult($result, $arrayName = NULL)
 		{
@@ -106,37 +141,12 @@
 		
 		public function getPacketString($base)
 		{
-			switch ($base)
-			{
-				case 2:
-					$prefix = '0b';
-					break;
-				case 8:
-					$prefix .= '0o';
-					break;
-				case 10:
-					$prefix .= '0d';
-					break;
-				case 16:
-					$prefix .= '0x';
-					break;
-				default:
-					$base = 16;
-					break;
-			}
-			
-			foreach ($this->arAddress as $value)
-			{
-				$arTmp[] = $prefix . base_convert($value, 16, $base);
-			}
-			
-			foreach ($this->arPacket as $value)
-			{
-				$arTmp[] = $prefix . base_convert($value, 16, $base);
-			}
-			$formatedStr = implode(' ', $arTmp);
-			
-			return $formatedStr;
+			if (is_array($this->arAddress))
+				$packet = array_merge($this->arAddress, $this->arPacket);
+			else 
+				$packet = $this->arPacket;
+		
+			return $this->PacketFormatter($packet, $base);
 		}
 		##################################################################################################################
 		public function compare(Packet $PacketForCompare) //Сравнивает массивы пакетов с конца 
