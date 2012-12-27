@@ -187,11 +187,7 @@
 	
 	class RMAP extends Packet
 	{
-		protected function __construct($arPacket, $arAddress = NULL)
-		{
-			parent::__construct($arPacket, $arAddress);
-			$this->setResult("Protocol:\tRMAP");
-		}
+		private $Instruction; //Instruction byte in binary formatted form
 		
 		static $errTable = array(
 		array('appl' => '111', 'error' => 'Command executed successfully'					),
@@ -232,13 +228,11 @@
 		'DataCRC'					=> 14
 		);  */
 		
-		
-
 		/* Карта содержащит обязательные изначальные три байта. */
 		private $packetMap = array(
-		array('type' => 'TargetLogicalAddress',	'length' => 1),		// Target Logical Address
-		array('type' => 'ProtocolID',			'length' => 1),		// Protocol ID
-		array('type' => 'Instruction',			'length' => 1)		// Instruction
+		array('type' => 'TargetLogicalAddress',	'length' => 1),
+		array('type' => 'ProtocolID',			'length' => 1),
+		array('type' => 'Instruction',			'length' => 1)
 		);
 
 		###############################################Открытые методы################################################
@@ -295,6 +289,12 @@
 				return $this->packetMap;
 		}
 		###############################################Support methods################################################
+		protected function __construct($arPacket, $arAddress = NULL)
+		{
+			parent::__construct($arPacket, $arAddress);
+			$this->setResult("Protocol:\tRMAP");
+		}
+		
 		private function updateMap(array $arMap)
 		{
 			if (key($arMap) !== NULL)
@@ -382,6 +382,7 @@
 		private function ParseInstruction($instrByte) 
 		{
 			$instrBin = sprintf("%08d", base_convert($instrByte, 16, 2));
+			$this->Instruction = $instrBin;
 			
 			$arMap; //Часть карты пакета
 			
@@ -496,15 +497,19 @@
 			}
 			$dataLength = (int)base_convert($dataLength, 16, 10);
 			
-			if ($dataLength != 0)
+			$result = $this->getResult();
+			//var_dump($this->Instruction);
+			if ('1' == $this->Instruction[2]) //Если пакет Read, то не создаем поля Data и DataCRC (согласно структуре) 
 			{
-				$arMap[] = array('type' => 'Data', 'length' => $dataLength);	//Data
-				$this->setResult("Data length:\t$dataLength");
+				if ($dataLength != 0)
+				{
+					$arMap[] = array('type' => 'Data', 'length' => $dataLength);	//Data
+					$this->setResult("Data length:\t$dataLength");
+				}
+				
+				$arMap[] = array('type' => 'DataCRC', 'length' => 1);			//Data CRC
+				$this->updateMap($arMap);
 			}
-			
-			$arMap[] = array('type' => 'DataCRC', 'length' => 1);			//Data CRC
-			
-			$this->updateMap($arMap);
 		}
 		
 		private function ParseHeaderCRC($crcByte)
