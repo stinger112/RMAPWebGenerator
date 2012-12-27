@@ -21,6 +21,7 @@
 		{
 			if ($packStr && is_string($packStr))
 			{	
+				$packStr = trim($packStr);
 				$arTmp = explode(' ', $packStr);
 				
 				if ($addressLength)
