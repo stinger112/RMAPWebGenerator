@@ -45,10 +45,6 @@
 			<option value="16" selected>Hexadecimal</option>
 			</select>
 			</p>
-				<div id="buttons"><p>
-					<input type="submit" value="Generate">
-					<a href="index.php" style="text-decoration: none"><input type="button" value="Back"></a></p>
-				</div>
 		</div>
 	</div>
 	
@@ -86,6 +82,10 @@
 	</div>
 	
 	<div id="result"></div>
+	<div id="buttons"><p>
+					<input type="submit" value="Send">
+					<a href="index.php" style="text-decoration: none"><input type="button" value="Back"></a></p>
+	</div>
 
 </form>
 </body>

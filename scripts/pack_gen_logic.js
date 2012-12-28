@@ -33,6 +33,12 @@ function CalculateHeader () //Calculate Header
 	return headerStr;
 }
 
+function CalculateHeaderCRC () //Calculate and save Header CRC
+{
+	var crc = GiveMeCRC(CalculateHeader()); 
+	$("input[name*='HeaderCRC']").val(crc);
+}
+
 function CalculateCommonFields ()
 {
 	var addressStr = $.trim($("input[name='ADDRESS']").val());
@@ -114,18 +120,16 @@ function main() {
 		instrStr = base_convert(instrStr, 2, 16);
 		$("input[name*='Instruction']").val(instrStr);
 		
-		var crc = GiveMeCRC(CalculateHeader()); //Calculate and save Header CRC
-		$("input[name*='HeaderCRC']").val(crc);
+		CalculateHeaderCRC();
 	});
 	
 	$(".head").on('keyup blur change', function () {
-		var crc = GiveMeCRC(CalculateHeader()); //Calculate and save Header CRC
-		$("input[name*='HeaderCRC']").val(crc);
+		CalculateHeaderCRC();
 	});
 	
 	
 	/*Обработчик изменения блока данных, заполняющий DataCRC и DataLength*/
-	$("[name='Data']").on('keyup blur', function() { 	
+	$("[name='13:Data']").on('keyup', function() { 	
 		var dataStr = $.trim($(".data").val());
 		
 		$("input[name*='DataCRC']").val(GiveMeCRC(dataStr)); //Giving Data CRC
@@ -134,6 +138,8 @@ function main() {
 		var dataLen = dataStr.split(' ').length; 		
 		var tmp = sprintf("%06x", dataLen);
 		$("input[name*='DataLength']").val(tmp[0]+tmp[1]+" "+tmp[2]+tmp[3]+" "+tmp[4]+tmp[5]);
+		
+		CalculateHeaderCRC();
 	});
 }
 
